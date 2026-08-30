@@ -1,0 +1,28 @@
+---
+import ToolScene from '../components/ToolScene.astro';
+---
+
+<ToolScene
+  title="PNG to WebP Converter — Free, 100% Local, Transparent"
+  description="Convert PNG to WebP online for free with alpha transparency preserved. Batch convert — no upload, files never leave your device."
+  heading="PNG to WebP"
+  highlight="converter"
+  subtitle="Convert PNG to WebP with transparency preserved. Smaller files, faster websites — all locally in your browser."
+  initialSettings={{ format: 'webp' }}
+  webAppName="PNG to WebP Converter"
+  webAppUrl="https://picture-zip.com/png-to-webp/"
+  faqs={[
+    {
+      q: 'Does PNG to WebP keep transparency?',
+      a: 'Yes. The converter preserves the alpha channel, so transparent PNGs stay transparent in WebP.',
+    },
+    {
+      q: 'Is WebP smaller than PNG?',
+      a: 'Usually yes — WebP typically produces much smaller files than PNG for photos, while keeping transparency for graphics.',
+    },
+    {
+      q: 'Can I convert multiple PNGs at once?',
+      a: 'Yes. Drag in as many PNGs as you like, convert them all, and download them together as a ZIP.',
+    },
+  ]}
+/>

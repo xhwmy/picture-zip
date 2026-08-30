@@ -1,0 +1,33 @@
+# Caddy 2 — automatic HTTPS + HSTS, reverse-proxies to the static web container
+{
+    email admin@picture-zip.com
+}
+
+picture-zip.com, www.picture-zip.com {
+    encode zstd gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # CSP: self + wasm-unsafe-eval for the codecs; umami self-hosted later
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+    }
+
+    reverse_proxy web:80
+
+    # www -> apex
+    @www host www.picture-zip.com
+    redir @www https://picture-zip.com{uri} permanent
+}
+
+# Self-hosted analytics (umami) on a subdomain
+analytics.picture-zip.com {
+    reverse_proxy umami:3000
+}
+
+# Public status page
+status.picture-zip.com {
+    reverse_proxy uptime-kuma:3001
+}

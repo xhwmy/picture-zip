@@ -1,0 +1,73 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const appLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'picture-zip Image Compression API',
+  url: 'https://picture-zip.com/api/',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Web',
+  description:
+    'A REST API for programmatic image compression and conversion. Coming soon.',
+};
+---
+
+<Layout
+  title="Image Compression API — Coming Soon | picture-zip"
+  description="Programmatic image compression and conversion API. Compress, resize and convert images via HTTP — coming soon."
+  jsonLd={[appLd]}
+>
+  <section class="container page">
+    <h1>Image Compression API</h1>
+    <p class="lead">
+      Automate image compression and conversion from your own scripts and apps.
+    </p>
+    <div class="card coming-soon">
+      <h2>HTTP API — coming soon</h2>
+      <p>
+        We're building a simple REST API for bulk image compression, resizing and format
+        conversion (JPEG, WebP, AVIF, PNG).
+      </p>
+      <ul class="list">
+        <li>Compress images to a target file size</li>
+        <li>Convert between formats</li>
+        <li>Batch processing with simple JSON responses</li>
+      </ul>
+      <p>
+        Want to be notified when it launches? Email{' '}
+        <a href="mailto:api@picture-zip.com">api@picture-zip.com</a> and we'll keep you posted.
+      </p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .page {
+    max-width: 760px;
+    margin-top: 48px;
+  }
+  .page h1 {
+    font-size: 34px;
+    margin-bottom: 12px;
+  }
+  .lead {
+    color: var(--muted);
+    font-size: 17px;
+    margin-bottom: 24px;
+  }
+  .coming-soon h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  .coming-soon p {
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .list {
+    margin: 0 0 14px 20px;
+  }
+  .list li {
+    margin: 4px 0;
+  }
+</style>

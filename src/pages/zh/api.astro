@@ -1,0 +1,45 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const appLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'picture-zip 图片压缩 API',
+  url: 'https://picture-zip.com/zh/api/',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Web',
+  description: '用于程序化图片压缩与转换的 REST API，即将推出。',
+};
+---
+
+<Layout
+  title="图片压缩 API — 即将推出 | picture-zip"
+  description="程序化图片压缩与转换 API，通过 HTTP 压缩、调整尺寸并转换图片——即将推出。"
+  lang="zh"
+  jsonLd={[appLd]}
+>
+  <section class="container page">
+    <h1>图片压缩 API</h1>
+    <p class="lead">在自己的脚本和应用中自动化图片压缩与转换。</p>
+    <div class="card coming-soon">
+      <h2>HTTP API — 即将推出</h2>
+      <p>我们正在构建一个简洁的 REST API，用于批量图片压缩、调整尺寸与格式转换（JPEG、WebP、AVIF、PNG）。</p>
+      <ul class="list">
+        <li>压缩图片到目标体积</li>
+        <li>格式之间转换</li>
+        <li>批量处理，简洁的 JSON 响应</li>
+      </ul>
+      <p>想在上线时收到通知？发邮件到 <a href="mailto:api@picture-zip.com">api@picture-zip.com</a>，我们会通知你。</p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .page { max-width: 760px; margin-top: 48px; }
+  .page h1 { font-size: 34px; margin-bottom: 12px; }
+  .lead { color: var(--muted); font-size: 17px; margin-bottom: 24px; }
+  .coming-soon h2 { font-size: 20px; margin-bottom: 10px; }
+  .coming-soon p { color: var(--muted); margin-bottom: 14px; }
+  .list { margin: 0 0 14px 20px; }
+  .list li { margin: 4px 0; }
+</style>

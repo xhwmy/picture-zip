@@ -1,0 +1,25 @@
+---
+import ToolScene from '../components/ToolScene.astro';
+---
+
+<ToolScene
+  title="GIF Compressor — Reduce GIF Size for Free, 100% Local"
+  description="Compress GIFs and reduce file size for free. Batch convert GIF to WebP locally in your browser — no upload, no limits."
+  heading="GIF"
+  highlight="compressor"
+  subtitle="Shrink GIFs for WeChat, Discord, email and more by converting to WebP — all locally, no upload."
+  initialSettings={{ format: 'webp' }}
+  targetModeDisabled
+  webAppName="GIF Compressor"
+  webAppUrl="https://picture-zip.com/gif-compressor/"
+  faqs={[
+    {
+      q: 'How do I make a GIF smaller?',
+      a: 'Convert it to WebP. WebP compresses animated and static images much more efficiently, often cutting size dramatically.',
+    },
+    {
+      q: 'Will my GIF stay animated?',
+      a: 'The current version converts GIF to a still WebP frame. Full animated GIF compression is on the roadmap.',
+    },
+  ]}
+/>

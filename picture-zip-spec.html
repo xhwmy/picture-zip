@@ -1,0 +1,438 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>picture-zip 开发规范（PRD + 技术规范 v1.0）</title>
+<style>
+  :root{
+    --ink:#1e293b;--muted:#64748b;--line:#e2e8f0;--bg:#f6f8fb;--card:#fff;
+    --accent:#2563eb;--accent-soft:#eff6ff;--green:#059669;--green-soft:#ecfdf5;
+    --amber:#d97706;--amber-soft:#fffbeb;--red:#dc2626;--red-soft:#fef2f2;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.75}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 22px 64px}
+  .hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#2563eb 100%);color:#fff;border-radius:16px;padding:38px 34px;margin-bottom:26px}
+  .hero h1{font-size:26px}
+  .hero p{margin-top:8px;color:#bfdbfe;font-size:15px}
+  .chips{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
+  .chip{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:3px 12px;font-size:13px}
+  h2{font-size:20px;margin:38px 0 14px;padding-left:12px;border-left:4px solid var(--accent)}
+  h3{font-size:15.5px;margin:18px 0 8px}
+  p{margin:8px 0;font-size:14px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;box-shadow:0 1px 3px rgba(15,23,42,.05);margin-bottom:14px}
+  .muted{color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,.05);margin:10px 0 16px}
+  th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f1f5f9;font-weight:600;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  code,pre{font-family:Consolas,"Courier New",monospace}
+  code{background:#eef2f7;border-radius:4px;padding:1px 6px;font-size:12.5px}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;font-size:12.5px;overflow-x:auto;line-height:1.6;margin:10px 0 16px}
+  .badge{display:inline-block;font-size:12px;border-radius:999px;padding:2px 10px;font-weight:600;margin-right:6px}
+  .b-p0{background:var(--red-soft);color:var(--red)}
+  .b-p1{background:var(--amber-soft);color:var(--amber)}
+  .b-p2{background:#f1f5f9;color:var(--muted)}
+  .callout{background:var(--accent-soft);border:1px solid #bfdbfe;border-radius:12px;padding:14px 18px;font-size:13.5px;color:#1e40af;margin:12px 0}
+  .warn{background:var(--red-soft);border:1px solid #fecaca;border-radius:12px;padding:14px 18px;font-size:13.5px;color:#7f1d1d;margin:12px 0}
+  ul{margin:6px 0 12px 20px;font-size:14px}
+  li{margin:4px 0}
+  .check li{list-style:none;margin-left:-20px;padding-left:26px;position:relative}
+  .check li::before{content:"☐";position:absolute;left:0;color:var(--accent)}
+  footer{margin-top:44px;text-align:center;color:#94a3b8;font-size:12.5px}
+  .toc{columns:2;column-gap:30px;font-size:14px}
+  .toc a{color:var(--accent);text-decoration:none;display:block;padding:3px 0}
+  @media(max-width:640px){.toc{columns:1}.hero{padding:26px 20px}.wrap{padding:24px 14px 48px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <h1>picture-zip 开发规范</h1>
+  <p>PRD + 技术规范 v1.0 · 纯浏览器本地处理的批量图片压缩与格式转换工具 · 中英双语 · 面向 Google 流量</p>
+  <div class="chips">
+    <span class="chip">🖼 本地 WASM 处理不上传</span>
+    <span class="chip">♾ 无数量/单文件限制</span>
+    <span class="chip">🎯 目标大小模式（≤100KB）</span>
+    <span class="chip">🛰 Astro + Docker + Caddy</span>
+    <span class="chip">📈 Prometheus 监控体系</span>
+  </div>
+</div>
+
+<div class="panel">
+  <h3 style="margin-top:0">目录</h3>
+  <div class="toc">
+    <a href="#s1">1. 项目概述</a>
+    <a href="#s2">2. 目标用户与需求分析</a>
+    <a href="#s3">3. 功能需求明细</a>
+    <a href="#s4">4. 技术环境与架构</a>
+    <a href="#s5">5. 部署规范</a>
+    <a href="#s6">6. 监控与运维</a>
+    <a href="#s7">7. 质量要求与验收标准</a>
+    <a href="#s8">8. 项目里程碑</a>
+    <a href="#s9">9. 给 AI 编码工具的分步执行指令</a>
+    <a href="#s10">10. 运营与后续迭代备忘</a>
+    <a href="#s11">11. 风险与对策</a>
+  </div>
+</div>
+
+<h2 id="s1">1. 项目概述</h2>
+<div class="panel">
+  <h3 style="margin-top:0">1.1 一句话定位</h3>
+  <p>picture-zip 是一个<strong>纯浏览器本地处理</strong>的批量图片压缩与格式转换工具：用户拖入任意数量的图片，在<strong>不上传服务器</strong>的前提下完成压缩、转格式、压到目标体积（如 ≤100KB），随后打包 ZIP 下载。中英双语，面向全球用户，通过 Google 自然搜索获取流量。</p>
+  <h3>1.2 项目背景与目标</h3>
+  <table>
+    <tr><th>维度</th><th>内容</th></tr>
+    <tr><td><b>性质</b></td><td>个人运营的流量型工具网站，AI 辅助开发</td></tr>
+    <tr><td><b>商业目标</b></td><td>覆盖服务器成本（约 ¥30–60/月）；远期广告 + API 小额收益</td></tr>
+    <tr><td><b>运维目标</b></td><td>单机 Docker Compose 生产部署，落地 Prometheus + Grafana + Loki + Alertmanager 监控体系，积累真实运维经验</td></tr>
+    <tr><td><b>SEO 目标</b></td><td>上线 1 周内提交 Google Search Console / Bing Webmaster；3 个月内 3–5 个场景词进入前 3 页</td></tr>
+    <tr><td><b>用户目标</b></td><td>3 个月内月 PV 达到 10,000+</td></tr>
+  </table>
+  <h3>1.3 成功指标（3 个月观察）</h3>
+  <ul>
+    <li>月 PV ≥ 10,000（umami 统计）</li>
+    <li>核心场景词（如 compress image to 100kb）至少 1 个进入 Google 前 3 页</li>
+    <li>广告收入 ≥ $5/月（即覆盖成本）</li>
+    <li>服务可用性 ≥ 99.5%（Uptime Kuma 月报）</li>
+    <li>Lighthouse 性能分 ≥ 90（工具页）</li>
+  </ul>
+</div>
+
+<h2 id="s2">2. 目标用户与需求分析</h2>
+<div class="panel">
+  <h3 style="margin-top:0">2.1 用户画像</h3>
+  <table>
+    <tr><th>画像</th><th>场景</th><th>典型诉求</th></tr>
+    <tr><td><b>考试/报名者</b></td><td>公务员、教资、签证等报名，照片有体积上限（如 ≤50KB）</td><td>"把这个照片压到 50KB 以内还要清晰"</td></tr>
+    <tr><td><b>站长/前端</b></td><td>网站性能优化（Lighthouse、Core Web Vitals）</td><td>"几百张 PNG 批量转 WebP，保透明，别让我一张张点"</td></tr>
+    <tr><td><b>电商卖家</b></td><td>平台对主图有体积/格式限制</td><td>"200 张主图批量压到 200KB 内"</td></tr>
+    <tr><td><b>社交用户</b></td><td>表情包/GIF 体积超微信限制</td><td>"把 GIF 压到 1MB 内还能看"</td></tr>
+    <tr><td><b>iPhone 用户</b></td><td>HEIC 传到 Windows/微信打不开</td><td>"HEIC 批量转 JPG"</td></tr>
+    <tr><td><b>开发者</b></td><td>想在自动化脚本里调用压缩能力</td><td>"有没有 API，别让我手点"</td></tr>
+  </table>
+  <h3>2.2 现有竞品痛点（本项目机会）</h3>
+  <table>
+    <tr><th>竞品</th><th>痛点</th><th>本项目对策</th></tr>
+    <tr><td>TinyPNG</td><td>免费网页版一次 20 张、单张 ≤5MB，必须上传服务器</td><td>不限数量、不上传</td></tr>
+    <tr><td>Squoosh</td><td>一次只能一张，无批量</td><td>批量 + 队列</td></tr>
+    <tr><td>佐糖/图好快等</td><td>强制上传 + 广告密集 + 会员引导</td><td>本地处理 + 界面干净</td></tr>
+    <tr><td>PicTech 等</td><td>功能单一、无场景化入口</td><td>场景落地页矩阵</td></tr>
+  </table>
+  <h3>2.3 用户故事（验收基准）</h3>
+  <ul>
+    <li>考试报名者上传一张 5MB 证件照，输入"100KB"，10 秒内得到 ≤100KB 且人脸清晰的照片并下载。</li>
+    <li>站长一次拖入 200 张 PNG，全部转 WebP（保透明），一次 ZIP 下载，全程无上传（页面明确标注"本地处理，文件不离开设备"）。</li>
+    <li>手机用户用手机浏览器完成 HEIC→JPG 并下载，不跳应用商店。</li>
+    <li>开发者打开 API 页能了解配额与定价（占位页亦可）。</li>
+    <li>所有核心操作不注册、不登录、不付费。</li>
+  </ul>
+</div>
+
+<h2 id="s3">3. 功能需求明细</h2>
+<div class="panel">
+  <h3 style="margin-top:0">3.1 优先级总览</h3>
+  <p>
+    <span class="badge b-p0">P0 必须</span>压缩核心、目标大小、格式转换、批量队列 + ZIP、中英双语、SEO 基建<br>
+    <span class="badge b-p1">P1 应该</span>HEIC 输入、移动端完整适配、隐私/FAQ 页、API 占位页<br>
+    <span class="badge b-p2">P2 延后</span>PWA、前后画质对比、API 实际开通、用户/支付系统（明确不做于 MVP）
+  </p>
+
+  <h3>3.2 P0：图片压缩核心</h3>
+  <table>
+    <tr><th>编号</th><th>功能</th><th>需求明细</th></tr>
+    <tr><td>F-01</td><td><b>拖拽/选择（本地）</b></td><td>拖拽多选 + 点击选择 + 整文件夹（webkitdirectory）；输入格式 JPEG/PNG/WebP/GIF（P1 加 AVIF/HEIC）；单文件无大小上限（&gt;80MB 提示"可能较慢"）；数量无上限（&gt;200 张建议分批）</td></tr>
+    <tr><td>F-02</td><td><b>设置面板</b></td><td>输出格式 Auto/JPEG/PNG/WebP/AVIF；质量滑杆 1–100 默认 75；等比缩放（最大宽/高）；预设：Web 优化（WebP Q75）/ 极致（AVIF Q50）/ 兼容（JPEG Q80）</td></tr>
+    <tr><td>F-03</td><td><b>目标大小模式（杀手锏）</b></td><td>输入目标 KB（如 100），二分搜索编码质量 + 必要时等比降分辨率（下限 300×300），直到 ≤ 目标；显示"达标 ✓ 98KB"；GIF 不支持（置灰说明）</td></tr>
+    <tr><td>F-04</td><td><b>批量引擎</b></td><td>Worker 池 = max(1, min(4, hardwareConcurrency−1))；状态机 pending→processing→done/failed/skipped；单张失败不中断；暂停/继续/取消全部；未下载任务时刷新弹 beforeunload 确认</td></tr>
+    <tr><td>F-05</td><td><b>结果与下载</b></td><td>每张：缩略图 + 原大小→新大小 + 压缩率徽章（-78%）；单张下载 / 全部 ZIP（fflate）；命名 <code>原名_compressed.后缀</code> 重名加序号；完成后显示总节省量"已节省 45.3 MB（83.2%）"</td></tr>
+  </table>
+
+  <h3>3.3 P0：页面与 SEO</h3>
+  <table>
+    <tr><th>页面</th><th>路径</th><th>目标关键词</th></tr>
+    <tr><td>首页 + 工具</td><td><code>/</code></td><td>image compressor, bulk image compression</td></tr>
+    <tr><td>指定大小</td><td><code>/compress-to-100kb</code>（50/200 同理）</td><td>compress image to 100kb / 50kb / 200kb</td></tr>
+    <tr><td>PNG→WebP</td><td><code>/png-to-webp</code></td><td>png to webp, transparent webp</td></tr>
+    <tr><td>HEIC→JPG</td><td><code>/heic-to-jpg</code></td><td>heic to jpg</td></tr>
+    <tr><td>GIF 压缩</td><td><code>/gif-compressor</code></td><td>compress gif</td></tr>
+    <tr><td>API</td><td><code>/api</code></td><td>image compression api</td></tr>
+    <tr><td>关于/隐私</td><td><code>/about</code>, <code>/privacy</code></td><td>品牌词</td></tr>
+  </table>
+  <ul>
+    <li>每个场景页 = 同一工具组件 + 预置参数（100kb 页自动锁定目标模式 =100KB）+ 场景文案 + FAQ</li>
+    <li>URL：英文默认 <code>picture-zip.com/png-to-webp</code>；中文 <code>picture-zip.com/zh/png-to-webp</code>；按 <code>navigator.language</code> 自动识别，hreflang 互链</li>
+    <li>域名 <code>picture-zip.com</code>（被注册则备选 picturezip.app 等，注册前先查询）</li>
+    <li>SEO 基建：每页独立 title/description/canonical/OG；sitemap.xml 自动生成；robots.txt 全放行；JSON-LD（WebApplication + 每页 FAQPage）</li>
+    <li>性能预算：工具页首屏 JS ≤ 200KB gzipped（WASM 懒加载另计）、LCP &lt; 2.5s、CLS &lt; 0.1</li>
+    <li>无外部字体：中文系统字体栈 + 英文系统字体栈；图标全部内联 SVG/本地资源</li>
+  </ul>
+
+  <h3>3.4 P1 功能</h3>
+  <ul>
+    <li><b>F-09 HEIC 输入</b>：libheif-js WASM 解码；HEIC 仅作输入，转出 JPEG/WebP</li>
+    <li><b>F-10 移动端完整适配</b>：核心流程手机可用；拖拽区兼容 input[type=file] 调相册</li>
+    <li><b>F-11 隐私页 + FAQ 页</b>："所有处理在您的浏览器本地完成，文件不会上传"；FAQ 覆盖画质/数量限制/数据安全（AdSense 前置条件）</li>
+    <li><b>F-12 API 占位页</b>：coming soon + 邮件订阅占位 + SoftwareApplication 结构化数据</li>
+    <li><b>F-13 GIF 支持</b>：输入 GIF；输出 GIF 帧级压缩；P2 提示 GIF→MP4/WebM</li>
+  </ul>
+
+  <h3>3.5 P2 / 明确不做</h3>
+  <ul>
+    <li>用户系统、登录、支付——MVP 不做（YAGNI）</li>
+    <li>云端压缩、API 实际服务、CMS 插件——流量验证后立项</li>
+    <li>AI 超分/抠图——远期</li>
+  </ul>
+</div>
+
+<h2 id="s4">4. 技术环境与架构</h2>
+<div class="panel">
+  <h3 style="margin-top:0">4.1 技术栈选型（含理由）</h3>
+  <table>
+    <tr><th>层</th><th>选型</th><th>理由</th></tr>
+    <tr><td>框架</td><td><b>Astro 5.x</b> 静态站</td><td>零 JS 默认、SEO 极佳、Islands 按需注入交互</td></tr>
+    <tr><td>前端交互</td><td>原生 TS + Preact islands（按需）</td><td>体积小、可控</td></tr>
+    <tr><td>图像编解码</td><td><b>@jsquash 系列（jamsinclair/jSquash）</b>（WASM）</td><td>Squoosh 官方开源编解码器（MozJPEG/OxiPNG/WebP/AVIF），质量与安全背书</td></tr>
+    <tr><td>ZIP</td><td>fflate</td><td>无依赖、体积小、打包快</td></tr>
+    <tr><td>HEIC</td><td>libheif-js</td><td>成熟 WASM 方案</td></tr>
+    <tr><td>样式</td><td>原生 CSS + CSS 变量</td><td>控体积；若用 Tailwind 必须 purge</td></tr>
+    <tr><td>服务器</td><td>2C2G VPS + Docker Compose</td><td>单机足够；本地处理使带宽压力极小</td></tr>
+    <tr><td>反代</td><td>Caddy 2</td><td>自动 HTTPS、配置极简</td></tr>
+    <tr><td>CDN</td><td>Cloudflare 免费版</td><td>全球加速 + 基础防护</td></tr>
+    <tr><td>分析</td><td>umami 自托管</td><td>无 Cookie、轻量、数据自持</td></tr>
+    <tr><td>监控</td><td>Prometheus + Grafana + Loki + Alertmanager + Uptime Kuma</td><td>见第 6 节</td></tr>
+    <tr><td>CI/CD</td><td>GitHub Actions → SSH 部署</td><td>push main 自动上线</td></tr>
+  </table>
+
+  <h3>4.2 本地开发环境要求</h3>
+  <table>
+    <tr><th>项</th><th>要求</th></tr>
+    <tr><td>OS</td><td>Windows 10/11（当前机器）或任意</td></tr>
+    <tr><td>Node.js</td><td>≥ 20 LTS（含 npm）</td></tr>
+    <tr><td>包管理</td><td>pnpm（推荐）或 npm</td></tr>
+    <tr><td>编辑器</td><td>VS Code / Cursor（AI 辅助编码）</td></tr>
+    <tr><td>浏览器</td><td>Chrome 最新（开发调试）+ Safari 移动模拟</td></tr>
+    <tr><td>Git</td><td>必需，GitHub 私有仓库</td></tr>
+  </table>
+<pre>git clone https://github.com/&lt;you&gt;/picture-zip.git
+cd picture-zip
+pnpm install
+pnpm dev        # http://localhost:4321
+pnpm build      # 产出 dist/
+pnpm preview    # 本地预览产物</pre>
+
+  <h3>4.3 目录结构（约定）</h3>
+<pre>picture-zip/
+├── astro.config.mjs
+├── package.json
+├── public/
+│   ├── favicon.svg
+│   └── robots.txt
+├── src/
+│   ├── components/        # Uploader / QueueList / SettingsPanel / ResultCard / ZipButton
+│   ├── lib/
+│   │   ├── codecs.ts      # jsquash 封装：各格式 encode/decode
+│   │   ├── compress.ts    # 压缩流水线：decode →(resize)→ encode
+│   │   ├── targetSize.ts  # 二分搜索目标大小
+│   │   ├── queue.ts       # 任务队列 + Worker 池
+│   │   └── i18n.ts        # 语言检测与切换
+│   ├── workers/
+│   │   └── compress.worker.ts
+│   ├── i18n/{en,zh}.json
+│   ├── layouts/Layout.astro
+│   ├── pages/
+│   │   ├── index.astro
+│   │   ├── png-to-webp.astro
+│   │   ├── heic-to-jpg.astro
+│   │   ├── compress-to-100kb.astro   # 50/200kb 同理
+│   │   ├── gif-compressor.astro
+│   │   ├── api.astro / about.astro / privacy.astro
+│   │   └── zh/...                    # 中文路由
+│   └── styles/global.css
+└── docker/                # Dockerfile / Caddyfile / docker-compose.yml</pre>
+
+  <h3>4.4 核心数据流</h3>
+<pre>用户拖入文件 → File 对象数组（不离开浏览器）
+  → 队列（pending）
+  → Worker 池并行消费
+      → createImageBitmap / jsquash decode
+      → (可选 resize)
+      → encode（质量参数 或 二分目标大小）
+  → 结果 Blob（内存中）
+  → 单张下载 / fflate 打包 ZIP 下载
+  → 释放内存（URL.revokeObjectURL）</pre>
+  <div class="warn"><b>硬性约束：</b>全流程对用户文件<b>零网络请求</b>（除静态资源与 umami 统计）；代码中禁止出现把用户文件内容写入任何 fetch/XHR body 的路径。下载完成后立即释放 Blob 引用；WASM 按格式懒加载（用到才 import()）。</div>
+</div>
+
+<h2 id="s5">5. 部署规范</h2>
+<div class="panel">
+  <h3 style="margin-top:0">5.1 服务器要求</h3>
+  <table>
+    <tr><th>项</th><th>要求</th></tr>
+    <tr><td>VPS</td><td>2C2G 起步，香港/日本/美国节点（面向 Google 流量，无需备案）</td></tr>
+    <tr><td>系统</td><td>Ubuntu 22.04/24.04 LTS</td></tr>
+    <tr><td>依赖</td><td>Docker + Docker Compose 插件</td></tr>
+    <tr><td>域名</td><td>picture-zip.com（DNS 托管 Cloudflare，开启代理）</td></tr>
+  </table>
+  <h3>5.2 docker-compose 预期拓扑</h3>
+<pre>caddy (80/443) ──&gt; web (Astro 静态产物, nginx:alpine 托管 dist/)
+              ├──&gt; umami (+ Postgres)
+              ├──&gt; prometheus / grafana / loki / alertmanager / node_exporter
+              └──&gt; uptime-kuma</pre>
+  <ul>
+    <li>多阶段构建：<code>node:20 build → nginx:alpine 托管 dist/</code></li>
+    <li>Caddy 自动 HTTPS（Let's Encrypt）+ HTTP 强跳 + HSTS</li>
+    <li>源站防火墙仅放行 CF IP 段 + SSH 白名单（可选）</li>
+  </ul>
+  <h3>5.3 CI/CD</h3>
+  <ul>
+    <li>GitHub Actions：push main → pnpm build → 同步 dist 到 VPS → 容器重启 → 健康检查（curl 首页 200）</li>
+    <li>回滚：保留上一版 dist.bak；密钥全走 GitHub Secrets，不进仓库</li>
+  </ul>
+</div>
+
+<h2 id="s6">6. 监控与运维（学习目标 = 生产保障）</h2>
+<div class="panel">
+  <h3 style="margin-top:0">6.1 分阶段上线</h3>
+  <table>
+    <tr><th>阶段</th><th>组件</th><th>目的</th></tr>
+    <tr><td>Day 1</td><td>Uptime Kuma</td><td>拨测 + 对外状态页（status 子域）</td></tr>
+    <tr><td>Week 2</td><td>Prometheus + node_exporter + blackbox_exporter</td><td>主机指标 + HTTP 拨测</td></tr>
+    <tr><td>Week 3</td><td>Grafana + Loki + Promtail</td><td>看板 + 日志聚合</td></tr>
+    <tr><td>Week 4</td><td>Alertmanager</td><td>Telegram 告警闭环</td></tr>
+    <tr><td>持续</td><td>umami + restic 每日备份 + GH Actions</td><td>统计/备份/部署自动化</td></tr>
+  </table>
+  <h3>6.2 监控指标基线</h3>
+  <ul>
+    <li>主机：CPU、内存、磁盘（&gt;80% 告警）、负载</li>
+    <li>HTTP：状态码、TTFB、证书剩余天数（&lt;14 天告警）</li>
+    <li>容器：各服务 up 状态、重启次数</li>
+    <li>业务：umami PV/UV、热门落地页、来源关键词</li>
+  </ul>
+  <h3>6.3 告警规则（初始）</h3>
+  <table>
+    <tr><th>条件</th><th>级别</th><th>通道</th></tr>
+    <tr><td>站点连续 2 分钟不可达</td><td>P0</td><td>Telegram 即时</td></tr>
+    <tr><td>证书 &lt;14 天</td><td>P1</td><td>Telegram</td></tr>
+    <tr><td>磁盘 &gt;80%</td><td>P1</td><td>Telegram</td></tr>
+    <tr><td>内存 &gt;90% 持续 5 分钟</td><td>P1</td><td>Telegram</td></tr>
+  </table>
+</div>
+
+<h2 id="s7">7. 质量要求与验收标准</h2>
+<div class="panel">
+  <h3 style="margin-top:0">7.1 功能验收清单</h3>
+  <ul class="check">
+    <li>100 张 PNG（混合 1–10MB）批量转 WebP：全程无卡死；DevTools Network 面板验证除静态资源外无文件上传请求</li>
+    <li>目标大小模式：5MB 证件照 → ≤100KB 成功率 100%（50 张随机图片测试）</li>
+    <li>透明 PNG → WebP：透明保留（视觉验证 alpha 通道）</li>
+    <li>ZIP 解压后文件名/格式正确，重名不覆盖</li>
+    <li>中英切换完整、hreflang 正确、&lt;html lang&gt; 正确</li>
+    <li>手机 Safari/Chrome 全流程可用</li>
+    <li>Lighthouse：Performance ≥ 90 / SEO ≥ 95 / Best Practices ≥ 95</li>
+  </ul>
+  <h3>7.2 兼容性</h3>
+  <ul>
+    <li>Chrome/Edge/Firefox/Safari 最近 2 个大版本；iOS Safari 15+、Android Chrome 100+</li>
+    <li>不支持 WASM 的过旧浏览器：显示引导升级页（&lt;0.1% 流量，可接受）</li>
+  </ul>
+  <h3>7.3 安全与隐私</h3>
+  <ul>
+    <li>全站 HTTPS + HSTS；无第三方追踪脚本（umami 自托管免 Cookie，无需 Cookie 横幅）</li>
+    <li>CSP 基线：<code>default-src 'self'</code>，WASM 允许 <code>wasm-unsafe-eval</code></li>
+    <li>依赖锁版本（pnpm-lock.yaml）；CI 中 pnpm audit 高危即失败</li>
+  </ul>
+  <h3>7.4 性能预算</h3>
+  <table>
+    <tr><th>项</th><th>预算</th></tr>
+    <tr><td>首屏 JS（工具页）</td><td>≤ 200KB gzipped（WASM 懒加载另计）</td></tr>
+    <tr><td>LCP</td><td>&lt; 2.5s（4G 模拟）</td></tr>
+    <tr><td>CLS</td><td>&lt; 0.1</td></tr>
+    <tr><td>静态资源缓存</td><td>一年 immutable + 文件名 hash</td></tr>
+  </table>
+</div>
+
+<h2 id="s8">8. 项目里程碑</h2>
+<table>
+  <tr><th>里程碑</th><th>时间</th><th>交付物</th></tr>
+  <tr><td><b>M1 骨架</b></td><td>第 1 周前半</td><td>Astro 初始化、Layout、i18n 框架、首页 + 工具可用（单张压缩）</td></tr>
+  <tr><td><b>M2 核心</b></td><td>第 1 周后半</td><td>批量队列 + Worker 并行 + ZIP 打包 + 目标大小模式</td></tr>
+  <tr><td><b>M3 页面矩阵</b></td><td>第 2 周</td><td>7 个页面上线 + SEO 基建（sitemap/meta/JSON-LD/hreflang）</td></tr>
+  <tr><td><b>M4 部署</b></td><td>第 2 周末</td><td>VPS + Caddy + Cloudflare + HTTPS 上线，CI/CD 跑通</td></tr>
+  <tr><td><b>M5 监控</b></td><td>第 3–4 周</td><td>Uptime Kuma → Prometheus/Grafana/Loki → Alertmanager 告警闭环</td></tr>
+  <tr><td><b>M6 迭代</b></td><td>第 2 月起</td><td>HEIC/GIF 支持、前后对比；SEO 内容迭代；广告位接入</td></tr>
+  <tr><td><b>M7 变现</b></td><td>第 2–3 月</td><td>AdSense 申请接入；API 占位页；流量复盘</td></tr>
+</table>
+
+<h2 id="s9">9. 给 AI 编码工具的分步执行指令</h2>
+<div class="panel">
+  <p class="muted">把本节连同第 3、4 节一起喂给 Claude Code / Cursor 等工具，按顺序执行，每步验收后再进入下一步。</p>
+  <h3>Step 1（M1 骨架）</h3>
+<pre>用 Astro 5 + TypeScript 初始化项目 picture-zip。要求：
+- pnpm；strict TS；ESM
+- src/layouts/Layout.astro：含 &lt;html lang&gt; 动态、SEO head 组件（title/description/canonical/OG/hreflang）
+- src/i18n/{en,zh}.json + src/lib/i18n.ts：en 默认，zh 路由 /zh/...；页头语言切换器
+- 首页 index.astro：Hero 区（标题 + 一句话价值 + 徽章"100% Local Processing / 文件不离开设备"）+ Uploader 组件占位
+- styles/global.css：CSS 变量设计系统（色板、间距、圆角、阴影），无外部字体
+验收：pnpm dev 可打开，中英切换正常</pre>
+  <h3>Step 2（M2 核心引擎，最重要）</h3>
+<pre>实现 src/lib/{codecs,compress,targetSize,queue}.ts + workers/compress.worker.ts：
+- 用 @jsquash 系列（jamsinclair/jSquash） 实现 decode/encode：jpeg(mozjpeg)、png(oxipng)、webp、avif；WASM 按需动态 import
+- compress(file, options)：options={format:'auto'|'jpeg'|'png'|'webp'|'avif', quality:1-100, maxWidth?, maxHeight?}
+- targetSize 模式：输入目标 KB，二分 quality（必要时配合等比 resize，分辨率下限 300px），返回 {blob,width,height,qualityUsed,resized}
+- 队列：Worker 池数量 = max(1, min(4, hardwareConcurrency-1))；状态机 pending→processing→done/failed/skipped；支持 pause/resume/cancelAll
+- 全流程禁止任何网络请求
+验收：单张 5MB PNG → WebP Q75 成功；目标 100KB 模式输出 ≤100KB</pre>
+  <h3>Step 3（M2 UI）</h3>
+<pre>实现组件（原生 TS 渐进增强或 Preact island）：
+- Uploader：拖拽/多选/整文件夹；显示数量与总大小；&gt;80MB 单文件提示
+- SettingsPanel：输出格式/质量滑杆/尺寸限制/预设/目标大小模式（KB 输入；启用目标模式时锁定质量滑杆）
+- QueueList：每项缩略图+原名+大小变化+压缩率徽章+状态；失败行内原因；暂停/继续/全部取消
+- ResultBar：总节省量统计；单张下载/全部 ZIP（fflate）；文件名 _compressed 后缀防重
+- 空态/处理中/完成/失败四种 UI 状态齐备；i18n 全覆盖
+验收：100 张混合图片批量处理不卡 UI，ZIP 可解压</pre>
+  <h3>Step 4（M3 页面矩阵）</h3>
+<pre>按 3.3 节清单生成页面：compress-to-100kb（+50/200）、png-to-webp、heic-to-jpg（HEIC 支持上线前显示"即将支持"，但保留 WebP/JPEG 能力）、gif-compressor、api、about、privacy；
+每页：独立 meta/canonical/OG + FAQ 区块 + FAQPage JSON-LD + WebApplication JSON-LD + sitemap 纳管；中文版在 /zh/ 路由
+验收：Lighthouse SEO ≥ 95；sitemap 含全部页面</pre>
+  <h3>Step 5（M4 部署）</h3>
+<pre>编写 docker/{Dockerfile,Caddyfile,docker-compose.yml} 与 .github/workflows/deploy.yml：
+- 多阶段构建；Caddy 反代 + 自动 HTTPS + HSTS；compose 含 web/umami(+postgres)
+- GH Actions：push main → build → 部署到 VPS（SSH）→ 健康检查 curl 首页 200
+（前置：VPS 装 Ubuntu 22.04 + Docker；域名解析到 Cloudflare 并开代理）
+验收：push 一次代码自动上线，https 可访问</pre>
+  <h3>Step 6（M5 监控）</h3>
+<pre>在同一 VPS 用 docker compose 部署 prometheus + node_exporter + blackbox_exporter + grafana + loki + promtail + alertmanager + uptime-kuma；
+prometheus.yml 抓取本机指标 + blackbox http_2xx 拨测 https://域名；
+告警规则按 6.3 表配置，Telegram 通知；Grafana 导入 Node Exporter Full + 黑盒拨测看板
+验收：手动 stop web 容器 → 2 分钟内收到 Telegram 告警</pre>
+</div>
+
+<h2 id="s10">10. 运营与后续迭代备忘</h2>
+<div class="panel">
+  <ul style="margin-top:0">
+    <li>上线当天：提交 Google Search Console + Bing Webmaster；提交 sitemap</li>
+    <li>每周新增 1–2 个场景页（用 GSC 找词：印象高、排名 8–30 的词优先）</li>
+    <li>第 2 月接入 AdSense（隐私页与足量内容是前置条件，见 F-11）</li>
+    <li>API 页收集邮箱验证需求，再决定开发（配额建议：免费 500 张/月，$5/月起档）</li>
+    <li>每周复盘：umami 流量曲线 + GSC 查询词 + Prometheus 可用性</li>
+  </ul>
+</div>
+
+<h2 id="s11">11. 风险与对策</h2>
+<table>
+  <tr><th>风险</th><th>对策</th></tr>
+  <tr><td>SEO 沙盒期长（2–3 月无流量）</td><td>预期管理：持续加场景页；用 GSC 数据迭代；不轻易换域名</td></tr>
+  <tr><td>大图/大量图内存溢出</td><td>分批引导 + 及时释放内存 + 队列串行兜底</td></tr>
+  <tr><td>Safari AVIF 编码性能差</td><td>特性检测，过慢提示改用 WebP</td></tr>
+  <tr><td>jsquash 部分 WASM 体积大</td><td>懒加载 + 处理前预加载提示</td></tr>
+  <tr><td>被竞品复制</td><td>快速叠场景页与长尾；工具矩阵化提高壁垒</td></tr>
+  <tr><td>服务器单点故障</td><td>restic 每日备份到外部存储（B2/另一台 VPS），可快速重建</td></tr>
+</table>
+
+<footer>picture-zip 开发规范 v1.0 · 2026-08-30 · 本文件为 Markdown 正本的阅读版，正本：DEVELOPMENT-SPEC.md</footer>
+</div>
+</body>
+</html>

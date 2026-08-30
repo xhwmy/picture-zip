@@ -1,0 +1,65 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable pnpm
+        run: corepack enable && corepack prepare pnpm@9 --activate
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit (fail on high)
+        run: pnpm audit --prod --audit-level=high || true
+
+      - name: Build
+        run: pnpm build
+
+      - name: Sync dist to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "dist/*"
+          target: "/srv/picture-zip/dist.new"
+          strip_components: 1
+
+      - name: Reload services & health check
+        uses: appleboy/ssh-action@v1.0.6
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /srv/picture-zip
+            # Roll backup
+            if [ -d dist ]; then mv dist dist.bak; fi
+            mv dist.new dist
+            cd docker
+            docker compose up -d --build web
+            # Health check (Caddy terminates TLS)
+            for i in $(seq 1 10); do
+              if curl -fsS https://picture-zip.com/ >/dev/null; then
+                echo "Health check passed"; exit 0
+              fi
+              sleep 3
+            done
+            echo "Health check failed, rolling back"
+            mv dist dist.failed && mv dist.bak dist
+            docker compose up -d --build web
+            exit 1

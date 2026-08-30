@@ -1,0 +1,128 @@
+# picture-zip — single-node Docker Compose stack
+# Web (static Astro build) + Caddy (auto HTTPS) + umami analytics
+# Monitoring stack is opt-in via the `monitoring` profile:
+#   docker compose --profile monitoring up -d
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: picture-zip-web:latest
+    restart: unless-stopped
+    networks: [internal]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [web, umami, uptime-kuma]
+    networks: [internal, edge]
+
+  umami-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:-changeme}
+    volumes:
+      - umami_db:/var/lib/postgresql/data
+    networks: [internal]
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:-changeme}@umami-db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:-changeme}
+    depends_on: [umami-db]
+    networks: [internal]
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    restart: unless-stopped
+    volumes:
+      - uptime_kuma:/app/data
+    networks: [internal]
+
+  # ---- Monitoring stack (opt-in: --profile monitoring) ----
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    profiles: [monitoring]
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks: [internal]
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    profiles: [monitoring]
+    pid: host
+    volumes:
+      - /:/host:ro
+    command:
+      - --path.rootfs=/host
+    networks: [internal]
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:latest
+    restart: unless-stopped
+    profiles: [monitoring]
+    networks: [internal]
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    profiles: [monitoring]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks: [internal]
+
+  loki:
+    image: grafana/loki:latest
+    restart: unless-stopped
+    profiles: [monitoring]
+    volumes:
+      - loki_data:/loki
+    networks: [internal]
+
+  promtail:
+    image: grafana/promtail:latest
+    restart: unless-stopped
+    profiles: [monitoring]
+    volumes:
+      - /var/log:/var/log:ro
+      - ./monitoring/promtail.yml:/etc/promtail/config.yml:ro
+    networks: [internal]
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    restart: unless-stopped
+    profiles: [monitoring]
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    networks: [internal]
+
+volumes:
+  caddy_data:
+  caddy_config:
+  umami_db:
+  uptime_kuma:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+
+networks:
+  internal:
+  edge:

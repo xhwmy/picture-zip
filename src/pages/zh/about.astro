@@ -1,0 +1,46 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout
+  title="关于 — picture-zip"
+  description="picture-zip 是一个免费、隐私优先的图片压缩工具，全程在浏览器本地运行，不上传、无账号、无限制。"
+  lang="zh"
+>
+  <section class="container page">
+    <h1>关于 picture-zip</h1>
+    <p class="lead">一个免费、隐私优先的图片压缩工具，全程在浏览器本地运行。</p>
+
+    <div class="card">
+      <h2>为什么做 picture-zip？</h2>
+      <p>大多数在线图片工具会把你的文件上传到服务器、限制 20 张、并塞满广告。picture-zip 不同：每个字节都在浏览器本地通过 WebAssembly 处理，图片绝不离开你的设备。</p>
+    </div>
+
+    <div class="card">
+      <h2>它能做什么</h2>
+      <ul class="list">
+        <li>批量压缩并转换 JPEG、PNG、WebP、AVIF、GIF</li>
+        <li>压缩到精确目标体积（如 ≤ 100 KB）</li>
+        <li>PNG 转 WebP 保留透明通道</li>
+        <li>一键打包 ZIP 下载全部</li>
+        <li>支持中英双语，更多语言规划中</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>工作原理</h2>
+      <p>picture-zip 使用与 Google Squoosh 相同的开源编解码器（MozJPEG、OxiPNG、libwebp、libavif），编译为 WebAssembly 并在 Web Worker 中运行，因此界面不会卡顿。</p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .page { max-width: 760px; margin-top: 48px; }
+  .page h1 { font-size: 34px; margin-bottom: 12px; }
+  .lead { color: var(--muted); font-size: 17px; margin-bottom: 24px; }
+  .card { margin-bottom: 18px; }
+  .card h2 { font-size: 20px; margin-bottom: 10px; }
+  .card p { color: var(--muted); }
+  .list { margin: 0 0 0 20px; }
+  .list li { margin: 4px 0; color: var(--muted); }
+</style>

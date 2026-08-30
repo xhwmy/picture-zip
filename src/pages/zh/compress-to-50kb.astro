@@ -1,0 +1,26 @@
+---
+import ToolScene from '../../components/ToolScene.astro';
+const targetKB = 50;
+---
+
+<ToolScene
+  lang="zh"
+  title={`图片压缩到 ${targetKB}KB — 免费本地处理`}
+  description={`免费将任意图片压缩到 ${targetKB}KB 以内，全程本地处理，文件不上传。`}
+  heading="图片压缩到"
+  highlight={`${targetKB}KB`}
+  subtitle={`精确压到 ≤ ${targetKB}KB，适合考试报名、签证等照片要求——全程本地，不上传。`}
+  initialSettings={{ targetSizeKB: targetKB }}
+  webAppName={`图片压缩 — 压到 ${targetKB}KB`}
+  webAppUrl={`https://picture-zip.com/zh/compress-to-${targetKB}kb/`}
+  faqs={[
+    {
+      q: `如何把图片压到 ${targetKB}KB？`,
+      a: `拖入图片，目标大小模式会自动调节质量（必要时降低分辨率），直到文件 ≤ ${targetKB}KB。`,
+    },
+    {
+      q: '有图片大小限制吗？',
+      a: '没有硬性限制。大图本地处理，但超大文件可能稍慢。',
+    },
+  ]}
+/>

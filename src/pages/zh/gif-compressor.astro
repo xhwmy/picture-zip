@@ -1,0 +1,26 @@
+---
+import ToolScene from '../../components/ToolScene.astro';
+---
+
+<ToolScene
+  lang="zh"
+  title="GIF 压缩 — 免费减小 GIF 体积，本地处理"
+  description="免费压缩 GIF、减小文件体积，本地批量将 GIF 转 WebP，不上传、无限制。"
+  heading="GIF"
+  highlight="压缩器"
+  subtitle="通过将 GIF 转为 WebP 来缩小体积，适合微信、Discord、邮件等——全程本地，不上传。"
+  initialSettings={{ format: 'webp' }}
+  targetModeDisabled
+  webAppName="GIF 压缩器"
+  webAppUrl="https://picture-zip.com/zh/gif-compressor/"
+  faqs={[
+    {
+      q: '如何让 GIF 变小？',
+      a: '将其转为 WebP。WebP 压缩效率远高于 GIF，通常能大幅减小体积。',
+    },
+    {
+      q: 'GIF 还会动吗？',
+      a: '当前版本将 GIF 转为静态 WebP 单帧，完整动画 GIF 压缩在路线图中。',
+    },
+  ]}
+/>

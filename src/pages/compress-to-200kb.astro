@@ -1,0 +1,26 @@
+---
+import ToolScene from '../components/ToolScene.astro';
+
+const targetKB = 200;
+---
+
+<ToolScene
+  title={`Compress images to ${targetKB}KB — Free, 100% Local`}
+  description={`Compress any image to ${targetKB}KB or less for free. No upload, no limits — process locally in your browser.`}
+  heading="Compress images to"
+  highlight={`${targetKB}KB`}
+  subtitle={`Hit an exact file-size target (≤ ${targetKB}KB) for marketplaces and social media — all locally, no upload.`}
+  initialSettings={{ targetSizeKB: targetKB }}
+  webAppName={`Image Compressor — Compress to ${targetKB}KB`}
+  webAppUrl={`https://picture-zip.com/compress-to-${targetKB}kb/`}
+  faqs={[
+    {
+      q: `How do I compress an image to ${targetKB}KB?`,
+      a: `Drag in your image, and the target-size mode will automatically adjust quality (and reduce resolution if needed) until the file is ${targetKB}KB or smaller.`,
+    },
+    {
+      q: 'Can I batch-compress many images to a target size?',
+      a: 'Yes. Add as many images as you like and they will all be compressed to fit your target size, then download them together as a ZIP.',
+    },
+  ]}
+/>

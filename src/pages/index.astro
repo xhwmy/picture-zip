@@ -1,0 +1,144 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { ImageTool } from '../components/ImageTool';
+
+const webAppLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'picture-zip — Image Compressor & Converter',
+  url: 'https://picture-zip.com/',
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Web',
+  description:
+    'Batch compress and convert images to JPEG, WebP, AVIF or PNG entirely in your browser. No upload, no limits.',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+  },
+};
+
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'Are my images uploaded to a server?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'No. All processing happens locally in your browser using WebAssembly. Your files never leave your device.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Is there a limit on the number of images?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'No hard limit. You can batch-process hundreds of images, though very large batches may use more memory.',
+      },
+    },
+  ],
+};
+---
+
+<Layout
+  title="Compress & Convert Images for Free — picture-zip"
+  description="Batch compress, resize and convert images to JPEG, WebP, AVIF or PNG for free. 100% local processing — files never leave your device."
+  jsonLd={[webAppLd, faqLd]}
+>
+  <section class="hero">
+    <div class="container">
+      <h1 class="hero__title">Compress &amp; convert images<br /><span>without uploading</span></h1>
+      <p class="hero__subtitle">
+        Batch compress, resize and convert images to JPEG, WebP, AVIF or PNG — all locally in your browser.
+      </p>
+      <div class="hero__badges">
+        <span class="badge badge--accent">100% Local Processing</span>
+        <span class="badge badge--green">Files never leave your device</span>
+        <span class="badge badge--amber">No file count limit</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="container tool-section">
+    <ImageTool client:only="preact" />
+  </section>
+
+  <section class="container faq">
+    <h2>Frequently asked questions</h2>
+    <div class="faq__item">
+      <h3>Are my images uploaded to a server?</h3>
+      <p>No. All processing happens locally in your browser using WebAssembly. Your files never leave your device.</p>
+    </div>
+    <div class="faq__item">
+      <h3>Does compression reduce image quality?</h3>
+      <p>Lossy formats (JPEG, WebP, AVIF) trade some quality for smaller size. You control the quality slider, or use target-size mode to hit a specific size.</p>
+    </div>
+    <div class="faq__item">
+      <h3>What formats are supported?</h3>
+      <p>Input: JPEG, PNG, WebP, GIF, AVIF. Output: JPEG, PNG, WebP, AVIF.</p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #2563eb 100%);
+    color: #fff;
+    padding: 56px 0 64px;
+    text-align: center;
+  }
+  .hero__title {
+    font-size: 40px;
+    line-height: 1.2;
+    font-weight: 800;
+  }
+  .hero__title span {
+    color: #bfdbfe;
+  }
+  .hero__subtitle {
+    margin: 16px auto 0;
+    max-width: 560px;
+    color: #cbd5e1;
+    font-size: 17px;
+  }
+  .hero__badges {
+    margin-top: 22px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .tool-section {
+    margin-top: -28px;
+    position: relative;
+  }
+  .faq {
+    margin-top: 48px;
+    max-width: 720px;
+  }
+  .faq h2 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  .faq__item {
+    margin-bottom: 20px;
+  }
+  .faq__item h3 {
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+  .faq__item p {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  @media (max-width: 640px) {
+    .hero__title {
+      font-size: 28px;
+    }
+    .hero {
+      padding: 40px 0 52px;
+    }
+  }
+</style>

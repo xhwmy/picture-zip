@@ -1,0 +1,29 @@
+---
+import ToolScene from '../../components/ToolScene.astro';
+---
+
+<ToolScene
+  lang="zh"
+  title="PNG 转 WebP — 免费本地处理，保留透明"
+  description="免费在线将 PNG 转为 WebP，保留透明通道，批量转换，文件不上传。"
+  heading="PNG 转 WebP"
+  highlight="转换器"
+  subtitle="将 PNG 转为 WebP 并保留透明通道，体积更小、网站更快——全程本地处理。"
+  initialSettings={{ format: 'webp' }}
+  webAppName="PNG 转 WebP 转换器"
+  webAppUrl="https://picture-zip.com/zh/png-to-webp/"
+  faqs={[
+    {
+      q: 'PNG 转 WebP 会保留透明吗？',
+      a: '会。转换器保留 alpha 通道，透明 PNG 转 WebP 后依然透明。',
+    },
+    {
+      q: 'WebP 比 PNG 小吗？',
+      a: '通常是的——WebP 对照片类图片体积远小于 PNG，同时保留透明。',
+    },
+    {
+      q: '可以批量转换吗？',
+      a: '可以。拖入任意数量 PNG，全部转换后一次性打包 ZIP 下载。',
+    },
+  ]}
+/>

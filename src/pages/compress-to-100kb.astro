@@ -1,0 +1,30 @@
+---
+import ToolScene from '../components/ToolScene.astro';
+
+const targetKB = 100;
+---
+
+<ToolScene
+  title={`Compress images to ${targetKB}KB — Free, 100% Local`}
+  description={`Compress any image to ${targetKB}KB or less for free. No upload, no limits — process locally in your browser.`}
+  heading="Compress images to"
+  highlight={`${targetKB}KB`}
+  subtitle={`Hit an exact file-size target (≤ ${targetKB}KB) for exams, visas and photo requirements — all locally, no upload.`}
+  initialSettings={{ targetSizeKB: targetKB }}
+  webAppName={`Image Compressor — Compress to ${targetKB}KB`}
+  webAppUrl={`https://picture-zip.com/compress-to-${targetKB}kb/`}
+  faqs={[
+    {
+      q: `How do I compress an image to exactly ${targetKB}KB?`,
+      a: `Drag in your image, and the target-size mode will automatically adjust quality (and reduce resolution if needed) until the file is ${targetKB}KB or smaller.`,
+    },
+    {
+      q: 'Will the image still look clear?',
+      a: 'Yes. The tool finds the best possible quality that still fits under your target size, only downscaling resolution as a last resort.',
+    },
+    {
+      q: 'Are my images uploaded anywhere?',
+      a: 'No. All processing runs locally in your browser using WebAssembly. Your files never leave your device.',
+    },
+  ]}
+/>

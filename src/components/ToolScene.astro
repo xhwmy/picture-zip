@@ -1,0 +1,161 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { ImageTool } from './ImageTool';
+
+interface Faq {
+  q: string;
+  a: string;
+}
+
+interface Props {
+  lang?: 'en' | 'zh';
+  title: string;
+  description: string;
+  heading: string;
+  highlight?: string;
+  subtitle: string;
+  initialSettings?: Record<string, unknown>;
+  targetModeDisabled?: boolean;
+  faqs?: Faq[];
+  webAppName?: string;
+  webAppUrl?: string;
+}
+
+const {
+  lang = 'en',
+  title,
+  description,
+  heading,
+  highlight,
+  subtitle,
+  initialSettings,
+  targetModeDisabled,
+  faqs = [],
+  webAppName,
+  webAppUrl,
+} = Astro.props;
+
+const isZh = lang === 'zh';
+
+const webAppLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: webAppName ?? title,
+  url: webAppUrl ?? 'https://picture-zip.com/',
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Web',
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+
+const faqLd =
+  faqs.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqs.map((f) => ({
+          '@type': 'Question',
+          name: f.q,
+          acceptedAnswer: { '@type': 'Answer', text: f.a },
+        })),
+      }
+    : null;
+---
+
+<Layout
+  title={title}
+  description={description}
+  lang={lang}
+  jsonLd={faqLd ? [webAppLd, faqLd] : [webAppLd]}
+>
+  <section class="hero">
+    <div class="container">
+      <h1 class="hero__title">
+        {heading}
+        {highlight && <span> {highlight}</span>}
+      </h1>
+      <p class="hero__subtitle">{subtitle}</p>
+      <div class="hero__badges">
+        <span class="badge badge--accent">{isZh ? '100% 本地处理' : '100% Local Processing'}</span>
+        <span class="badge badge--green">{isZh ? '文件不离开你的设备' : 'Files never leave your device'}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="container tool-section">
+    <ImageTool client:only="preact" initialSettings={initialSettings} targetModeDisabled={targetModeDisabled} />
+  </section>
+
+  {faqs.length > 0 && (
+    <section class="container faq">
+      <h2>{isZh ? '常见问题' : 'Frequently asked questions'}</h2>
+      {faqs.map((f) => (
+        <div class="faq__item">
+          <h3>{f.q}</h3>
+          <p>{f.a}</p>
+        </div>
+      ))}
+    </section>
+  )}
+</Layout>
+
+<style>
+  .hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #2563eb 100%);
+    color: #fff;
+    padding: 56px 0 64px;
+    text-align: center;
+  }
+  .hero__title {
+    font-size: 38px;
+    line-height: 1.2;
+    font-weight: 800;
+  }
+  .hero__title span {
+    color: #bfdbfe;
+  }
+  .hero__subtitle {
+    margin: 16px auto 0;
+    max-width: 560px;
+    color: #cbd5e1;
+    font-size: 17px;
+  }
+  .hero__badges {
+    margin-top: 22px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .tool-section {
+    margin-top: -28px;
+    position: relative;
+  }
+  .faq {
+    margin-top: 48px;
+    max-width: 720px;
+  }
+  .faq h2 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  .faq__item {
+    margin-bottom: 20px;
+  }
+  .faq__item h3 {
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+  .faq__item p {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  @media (max-width: 640px) {
+    .hero__title {
+      font-size: 26px;
+    }
+    .hero {
+      padding: 40px 0 52px;
+    }
+  }
+</style>

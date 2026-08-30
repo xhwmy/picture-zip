@@ -1,0 +1,35 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# build output
+dist/
+.astro/
+
+# logs
+npm-debug.log*
+pnpm-debug.log*
+
+# environment
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.local
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# spec artifacts
+.codeartsdoer/
+.codegraph/
+
+# test artifacts
+test-results/
+lighthouse-reports/
+playwright-report/
+blob-report/
+.lhci/

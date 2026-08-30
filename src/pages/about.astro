@@ -1,0 +1,77 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="About — picture-zip"
+  description="picture-zip is a free, privacy-first image compressor that runs entirely in your browser. No uploads, no accounts, no limits."
+>
+  <section class="container page">
+    <h1>About picture-zip</h1>
+    <p class="lead">
+      A free, privacy-first image compressor that runs entirely in your browser.
+    </p>
+
+    <div class="card">
+      <h2>Why picture-zip?</h2>
+      <p>
+        Most online image tools upload your files to a server, cap you at 20 images, and bury
+        the tool under ads. picture-zip is different: every byte is processed locally in your
+        browser using WebAssembly. Your images never leave your device.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>What it does</h2>
+      <ul class="list">
+        <li>Batch compress and convert JPEG, PNG, WebP, AVIF and GIF</li>
+        <li>Compress to an exact target file size (e.g. ≤ 100 KB)</li>
+        <li>Preserve transparency when converting PNG to WebP</li>
+        <li>Download everything as a ZIP in one click</li>
+        <li>Works in Chinese and English, with more coming</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>How it works</h2>
+      <p>
+        picture-zip uses the same open-source codecs that power Google's Squoosh (MozJPEG,
+        OxiPNG, libwebp, libavif), compiled to WebAssembly and run inside Web Workers so your
+        UI never freezes.
+      </p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .page {
+    max-width: 760px;
+    margin-top: 48px;
+  }
+  .page h1 {
+    font-size: 34px;
+    margin-bottom: 12px;
+  }
+  .lead {
+    color: var(--muted);
+    font-size: 17px;
+    margin-bottom: 24px;
+  }
+  .card {
+    margin-bottom: 18px;
+  }
+  .card h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  .card p {
+    color: var(--muted);
+  }
+  .list {
+    margin: 0 0 0 20px;
+  }
+  .list li {
+    margin: 4px 0;
+    color: var(--muted);
+  }
+</style>

@@ -1,0 +1,52 @@
+{
+  "ci": {
+    "collect": {
+      "startServerCommand": "pnpm preview --port 4321",
+      "url": [
+        "http://127.0.0.1:4321/",
+        "http://127.0.0.1:4321/compress-to-100kb",
+        "http://127.0.0.1:4321/compress-to-50kb",
+        "http://127.0.0.1:4321/compress-to-200kb",
+        "http://127.0.0.1:4321/png-to-webp",
+        "http://127.0.0.1:4321/heic-to-jpg",
+        "http://127.0.0.1:4321/gif-compressor",
+        "http://127.0.0.1:4321/api",
+        "http://127.0.0.1:4321/about",
+        "http://127.0.0.1:4321/privacy",
+        "http://127.0.0.1:4321/zh/",
+        "http://127.0.0.1:4321/zh/compress-to-100kb",
+        "http://127.0.0.1:4321/zh/compress-to-50kb",
+        "http://127.0.0.1:4321/zh/compress-to-200kb",
+        "http://127.0.0.1:4321/zh/png-to-webp",
+        "http://127.0.0.1:4321/zh/heic-to-jpg",
+        "http://127.0.0.1:4321/zh/gif-compressor",
+        "http://127.0.0.1:4321/zh/api",
+        "http://127.0.0.1:4321/zh/about",
+        "http://127.0.0.1:4321/zh/privacy"
+      ],
+      "numberOfRuns": 3,
+      "settings": {
+        "onlyCategories": ["performance"],
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 4000,
+          "uploadThroughputKbps": 1000,
+          "cpuSlowdownMultiplier": 4
+        }
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance": [" >= ", 90],
+        "largest-contentful-paint": ["<", 2500],
+        "cumulative-layout-shift": ["<", 0.1]
+      },
+      "budget": "./tests/lighthouse/budgets.json"
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": "lighthouse-reports",
+      "reportFilenamePattern": "%%PATHNAME%%-%%DATETIME%%-report.%%EXTENSION%%"
+    }
+  }
+}

@@ -1,0 +1,178 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  lang?: 'en' | 'zh';
+  canonical?: string;
+  ogImage?: string;
+  ogType?: string;
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const {
+  title,
+  description = '',
+  lang = 'en',
+  canonical,
+  ogImage = '/favicon.svg',
+  ogType = 'website',
+  noindex = false,
+  jsonLd,
+} = Astro.props;
+
+const site = Astro.site ?? new URL('https://picture-zip.com');
+const canonicalUrl = canonical ?? new URL(Astro.url.pathname, site).toString();
+const isZh = lang === 'zh';
+const oppositeLang = isZh ? 'en' : 'zh';
+
+const nav = isZh
+  ? [
+      { label: '首页', href: '/zh/' },
+      { label: 'API', href: '/zh/api/' },
+      { label: '关于', href: '/zh/about/' },
+      { label: '隐私', href: '/zh/privacy/' },
+    ]
+  : [
+      { label: 'Home', href: '/' },
+      { label: 'API', href: '/api/' },
+      { label: 'About', href: '/about/' },
+      { label: 'Privacy', href: '/privacy/' },
+    ];
+
+function oppositeUrl(pathname: string): string {
+  if (isZh) {
+    return pathname.replace(/^\/zh/, '') || '/';
+  }
+  return `/zh${pathname === '/' ? '/' : pathname}`;
+}
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    {noindex && <meta name="robots" content="noindex,nofollow" />}
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="alternate" hreflang={oppositeLang} href={new URL(oppositeUrl(Astro.url.pathname), site).toString()} />
+    <link rel="alternate" hreflang={lang} href={canonicalUrl} />
+    <link rel="alternate" hreflang="x-default" href={new URL(Astro.url.pathname.replace(/^\/zh/, ''), site).toString()} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {
+      jsonLd && (
+        <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+      )
+    }
+    <script is:inline>
+      window.__LANG__ = document.documentElement.lang || 'en';
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href={isZh ? '/zh/' : '/'}>
+          <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true">
+            <rect width="64" height="64" rx="14" fill="#2563eb"></rect>
+            <path d="M32 14l12 12-4 4-6-6v18h-4V24l-6 6-4-4z" fill="#fff"></path>
+            <path d="M18 44h28v4H18z" fill="#fff" opacity="0.9"></path>
+          </svg>
+          <span>picture-zip</span>
+        </a>
+        <nav class="site-nav">
+          {nav.map((item) => <a href={item.href}>{item.label}</a>)}
+          <a class="lang-switch" href={oppositeUrl(Astro.url.pathname)}>{isZh ? 'English' : '中文'}</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <span>© 2026 picture-zip · {isZh ? '图片压缩与格式转换' : 'Image compression & conversion'}</span>
+        <span class="footer-privacy">{isZh ? '本地处理 · 文件不离开设备' : 'Local processing · files never leave your device'}</span>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--ink);
+  }
+  .brand:hover {
+    text-decoration: none;
+  }
+  .site-nav {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 14px;
+  }
+  .site-nav a {
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .site-nav a:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .lang-switch {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 14px;
+    font-weight: 600;
+  }
+  .lang-switch:hover {
+    border-color: var(--accent);
+  }
+  .site-footer {
+    border-top: 1px solid var(--line);
+    margin-top: 60px;
+    padding: 24px 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .footer-inner {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  @media (max-width: 640px) {
+    .site-nav {
+      gap: 12px;
+      font-size: 13px;
+    }
+  }
+</style>

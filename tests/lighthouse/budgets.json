@@ -1,0 +1,12 @@
+{
+  "budgets": [
+    {
+      "resourceSizes": [
+        {
+          "resourceType": "script",
+          "budget": 200
+        }
+      ]
+    }
+  ]
+}
