@@ -21,9 +21,13 @@ export function QueueList({
 }: QueueListProps) {
   const hasItems = items.length > 0;
   const activeCount = items.filter((i) => i.status === 'pending' || i.status === 'processing').length;
+  const doneCount = items.filter((i) => i.status === 'done').length;
 
   return (
     <div class="queue">
+      <div class="sr-only" role="status" aria-live="polite">
+        {hasItems && t('queue.progressAnnouncement', { done: doneCount, total: items.length })}
+      </div>
       <div class="queue__head">
         <h2 class="queue__title">
           {t('queue.title')}

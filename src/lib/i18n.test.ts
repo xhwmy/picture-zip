@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { getLang, onLangChange, setLang, t } from './i18n';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { getLang, onLangChange, setLang, t, readInitialLang } from './i18n';
 
 describe('i18n', () => {
   beforeEach(() => {
     setLang('en');
+    try { localStorage.removeItem('pz-lang-pref'); } catch { /* ignore */ }
   });
 
   it('translates known keys in English', () => {
@@ -34,5 +35,79 @@ describe('i18n', () => {
     expect(fired).toBe(2);
     expect(getLang()).toBe('en');
     off();
+  });
+});
+
+describe('readInitialLang', () => {
+  beforeEach(() => {
+    try { localStorage.removeItem('pz-lang-pref'); } catch { /* ignore */ }
+  });
+
+  it('returns zh when localStorage pref is zh', () => {
+    localStorage.setItem('pz-lang-pref', 'zh');
+    expect(readInitialLang()).toBe('zh');
+  });
+
+  it('returns en when localStorage pref is en', () => {
+    localStorage.setItem('pz-lang-pref', 'en');
+    expect(readInitialLang()).toBe('en');
+  });
+
+  it('ignores invalid localStorage pref and falls through', () => {
+    localStorage.setItem('pz-lang-pref', 'fr');
+    vi.stubGlobal('navigator', { language: 'en-US' });
+    vi.stubGlobal('location', { pathname: '/' });
+    expect(readInitialLang()).toBe('en');
+    vi.unstubAllGlobals();
+  });
+
+  it('returns zh when URL path starts with /zh and no localStorage', () => {
+    vi.stubGlobal('location', { pathname: '/zh/' });
+    vi.stubGlobal('navigator', { language: 'en-US' });
+    expect(readInitialLang()).toBe('zh');
+    vi.unstubAllGlobals();
+  });
+
+  it('returns zh when URL path is /zh/compress-to-100kb', () => {
+    vi.stubGlobal('location', { pathname: '/zh/compress-to-100kb' });
+    vi.stubGlobal('navigator', { language: 'en-US' });
+    expect(readInitialLang()).toBe('zh');
+    vi.unstubAllGlobals();
+  });
+
+  it('localStorage takes priority over URL path', () => {
+    localStorage.setItem('pz-lang-pref', 'en');
+    vi.stubGlobal('location', { pathname: '/zh/' });
+    vi.stubGlobal('navigator', { language: 'zh-CN' });
+    expect(readInitialLang()).toBe('en');
+    vi.unstubAllGlobals();
+  });
+
+  it('URL path takes priority over navigator.language', () => {
+    vi.stubGlobal('location', { pathname: '/zh/' });
+    vi.stubGlobal('navigator', { language: 'en-US' });
+    expect(readInitialLang()).toBe('zh');
+    vi.unstubAllGlobals();
+  });
+
+  it('falls back to navigator.language when no localStorage and URL is /', () => {
+    vi.stubGlobal('location', { pathname: '/' });
+    vi.stubGlobal('navigator', { language: 'zh-CN' });
+    expect(readInitialLang()).toBe('zh');
+    vi.unstubAllGlobals();
+  });
+
+  it('returns en when no localStorage, URL is /, and navigator is en-US', () => {
+    vi.stubGlobal('location', { pathname: '/' });
+    vi.stubGlobal('navigator', { language: 'en-US' });
+    expect(readInitialLang()).toBe('en');
+    vi.unstubAllGlobals();
+  });
+
+  it('returns en as default when nothing matches', () => {
+    vi.stubGlobal('location', { pathname: '/' });
+    vi.stubGlobal('navigator', { language: 'fr-FR' });
+    expect(readInitialLang()).toBe('en');
+    vi.unstubAllGlobals();
   });
 });

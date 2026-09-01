@@ -26,6 +26,10 @@ export interface ToolPage {
   getFormat(): Promise<string>;
   isQualityDisabled(): Promise<boolean>;
   isTargetModeEnabled(): Promise<boolean>;
+  selectResizePreset(label: string): Promise<void>;
+  getSelectedResizePreset(): Promise<string>;
+  getResizeMaxWidth(): Promise<string>;
+  getResizeMaxHeight(): Promise<string>;
 }
 
 export interface ResultCardLocators {
@@ -110,7 +114,7 @@ export function createToolPage(page: Page): ToolPage {
       const cards = page.locator('.result-card');
       const count = await cards.count();
       for (let i = 0; i < count; i++) {
-        await expect(cards.nth(i)).toHaveClass(/result-card--(done|failed|skipped)/, { timeout: 60000 });
+        await expect(cards.nth(i)).toHaveClass(/result-card--(done|failed|skipped|cancelled)/, { timeout: 60000 });
       }
     },
 
@@ -175,6 +179,22 @@ export function createToolPage(page: Page): ToolPage {
 
     async isTargetModeEnabled(): Promise<boolean> {
       return page.locator('.settings__target input[type=checkbox]').isChecked();
+    },
+
+    async selectResizePreset(label: string): Promise<void> {
+      await page.locator('.settings__preset-select').selectOption({ label });
+    },
+
+    async getSelectedResizePreset(): Promise<string> {
+      return page.locator('.settings__preset-select').inputValue();
+    },
+
+    async getResizeMaxWidth(): Promise<string> {
+      return page.locator('.settings__dims .input').first().inputValue();
+    },
+
+    async getResizeMaxHeight(): Promise<string> {
+      return page.locator('.settings__dims .input').nth(1).inputValue();
     },
   };
 }

@@ -46,17 +46,32 @@ const faqLd = {
   title="Compress & Convert Images for Free — picture-zip"
   description="Batch compress, resize and convert images to JPEG, WebP, AVIF or PNG for free. 100% local processing — files never leave your device."
   jsonLd={[webAppLd, faqLd]}
+  langRedirect
 >
   <section class="hero">
-    <div class="container">
-      <h1 class="hero__title">Compress &amp; convert images<br /><span>without uploading</span></h1>
-      <p class="hero__subtitle">
-        Batch compress, resize and convert images to JPEG, WebP, AVIF or PNG — all locally in your browser.
-      </p>
-      <div class="hero__badges">
-        <span class="badge badge--accent">100% Local Processing</span>
-        <span class="badge badge--green">Files never leave your device</span>
-        <span class="badge badge--amber">No file count limit</span>
+    <div class="container hero__inner">
+      <div class="hero__text">
+        <h1 class="hero__title">Compress &amp; convert images<br /><span>without uploading</span></h1>
+        <p class="hero__subtitle">
+          Batch compress, resize and convert images to JPEG, WebP, AVIF or PNG — all locally in your browser.
+        </p>
+        <div class="hero__badges">
+          <span class="badge badge--accent">100% Local</span>
+          <span class="badge badge--green">No upload</span>
+          <span class="badge badge--amber">No limit</span>
+        </div>
+      </div>
+      <div class="hero__demo">
+        <div class="hero__demo-item">
+          <img src="/demo-before.jpg" alt="Before compression" loading="eager" width="200" height="150" />
+          <span class="hero__demo-label">778 KB</span>
+        </div>
+        <div class="hero__demo-arrow" aria-hidden="true">→</div>
+        <div class="hero__demo-item">
+          <img src="/demo-after.jpg" alt="After compression" loading="eager" width="200" height="150" />
+          <span class="hero__demo-label hero__demo-label--accent">11 KB</span>
+        </div>
+        <div class="hero__demo-badge">99% smaller</div>
       </div>
     </div>
   </section>
@@ -84,31 +99,81 @@ const faqLd = {
 
 <style>
   .hero {
-    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #2563eb 100%);
-    color: #fff;
-    padding: 56px 0 64px;
-    text-align: center;
+    background: var(--bg);
+    padding: 48px 0 56px;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+  }
+  .hero__text {
+    flex: 1;
   }
   .hero__title {
     font-size: 40px;
     line-height: 1.2;
     font-weight: 800;
+    color: var(--ink);
   }
   .hero__title span {
-    color: #bfdbfe;
+    color: var(--accent);
   }
   .hero__subtitle {
-    margin: 16px auto 0;
+    margin: 16px 0 0;
     max-width: 560px;
-    color: #cbd5e1;
+    color: var(--muted);
     font-size: 17px;
   }
   .hero__badges {
     margin-top: 22px;
     display: flex;
-    justify-content: center;
     flex-wrap: wrap;
     gap: 10px;
+  }
+  .hero__demo {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+  }
+  .hero__demo-item {
+    text-align: center;
+  }
+  .hero__demo-item img {
+    border-radius: 8px;
+    border: 1px solid var(--line);
+  }
+  .hero__demo-label {
+    display: block;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .hero__demo-label--accent {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .hero__demo-arrow {
+    font-size: 24px;
+    color: var(--muted);
+  }
+  .hero__demo-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
   }
   .tool-section {
     margin-top: -28px;
@@ -133,12 +198,59 @@ const faqLd = {
     color: var(--muted);
     font-size: 14px;
   }
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
+    .hero__inner {
+      flex-direction: column;
+    }
+    .hero__demo {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      justify-content: center;
+    }
+    .hero__demo-item img {
+      width: auto;
+      max-width: min(42vw, 160px);
+      height: auto;
+    }
     .hero__title {
       font-size: 28px;
     }
     .hero {
-      padding: 40px 0 52px;
+      padding: 32px 0 40px;
+    }
+  }
+  @media (max-width: 640px) {
+    .hero__demo {
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 14px;
+      width: 100%;
+      box-sizing: border-box;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    .hero__demo-item {
+      width: 100%;
+      text-align: center;
+    }
+    .hero__demo-item img {
+      width: 100%;
+      max-width: min(70vw, 200px);
+      height: auto;
+    }
+    .hero__demo-arrow {
+      width: auto;
+      text-align: center;
+      font-size: 20px;
+      transform: rotate(90deg);
+    }
+    .hero__demo-badge {
+      top: 4px;
+      right: 4px;
+      font-size: 11px;
+      padding: 3px 8px;
     }
   }
 </style>

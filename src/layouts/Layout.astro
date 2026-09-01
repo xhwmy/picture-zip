@@ -10,6 +10,7 @@ interface Props {
   ogType?: string;
   noindex?: boolean;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  langRedirect?: boolean;
 }
 
 const {
@@ -17,16 +18,29 @@ const {
   description = '',
   lang = 'en',
   canonical,
-  ogImage = '/favicon.svg',
+  ogImage = '/og-image.png',
   ogType = 'website',
   noindex = false,
   jsonLd,
+  langRedirect = false,
 } = Astro.props;
 
 const site = Astro.site ?? new URL('https://picture-zip.com');
 const canonicalUrl = canonical ?? new URL(Astro.url.pathname, site).toString();
 const isZh = lang === 'zh';
 const oppositeLang = isZh ? 'en' : 'zh';
+
+const bcp47Map = { en: 'en-US', zh: 'zh-CN' } as const;
+const bcp47 = bcp47Map[lang];
+const oppositeBcp47 = bcp47Map[oppositeLang];
+
+const umamiId = import.meta.env.PUBLIC_UMAMI_WEBSITE_ID as string | undefined;
+const umamiScriptUrl = (import.meta.env.PUBLIC_UMAMI_SCRIPT_URL as string | undefined) ??
+  'https://analytics.picture-zip.com/script.js';
+
+const absoluteOgImage = ogImage.startsWith('http')
+  ? ogImage
+  : new URL(ogImage, site).toString();
 
 const nav = isZh
   ? [
@@ -51,7 +65,7 @@ function oppositeUrl(pathname: string): string {
 ---
 
 <!doctype html>
-<html lang={lang}>
+<html lang={bcp47}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -63,20 +77,26 @@ function oppositeUrl(pathname: string): string {
     <meta property="og:description" content={description} />
     <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:image" content={ogImage} />
+    <meta property="og:image" content={absoluteOgImage} />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="alternate" hreflang={oppositeLang} href={new URL(oppositeUrl(Astro.url.pathname), site).toString()} />
-    <link rel="alternate" hreflang={lang} href={canonicalUrl} />
+    <link rel="alternate" hreflang={oppositeBcp47} href={new URL(oppositeUrl(Astro.url.pathname), site).toString()} />
+    <link rel="alternate" hreflang={bcp47} href={canonicalUrl} />
     <link rel="alternate" hreflang="x-default" href={new URL(Astro.url.pathname.replace(/^\/zh/, ''), site).toString()} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {umamiId && (
+      <script async defer src={umamiScriptUrl} data-website-id={umamiId} is:inline></script>
+    )}
+    <slot name="head" />
+    {langRedirect && (
+      <script>
+        import '../scripts/lang-redirect';
+      </script>
+    )}
     {
       jsonLd && (
         <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
       )
     }
-    <script is:inline>
-      window.__LANG__ = document.documentElement.lang || 'en';
-    </script>
   </head>
   <body>
     <header class="site-header">
@@ -89,9 +109,20 @@ function oppositeUrl(pathname: string): string {
           </svg>
           <span>picture-zip</span>
         </a>
-        <nav class="site-nav">
+        <nav class="site-nav site-nav--desktop">
           {nav.map((item) => <a href={item.href}>{item.label}</a>)}
-          <a class="lang-switch" href={oppositeUrl(Astro.url.pathname)}>{isZh ? 'English' : '中文'}</a>
+          <a class="lang-switch" href={oppositeUrl(Astro.url.pathname)} data-lang={oppositeLang}>{isZh ? 'English' : '中文'}</a>
+        </nav>
+        <button class="menu-toggle" id="menu-toggle" type="button" aria-label={isZh ? '菜单' : 'Menu'} aria-expanded="false" aria-controls="mobile-menu">
+          <span class="menu-toggle__bar"></span>
+          <span class="menu-toggle__bar"></span>
+          <span class="menu-toggle__bar"></span>
+        </button>
+      </div>
+      <div class="mobile-menu" id="mobile-menu" hidden>
+        <nav class="mobile-menu__nav">
+          {nav.map((item) => <a href={item.href}>{item.label}</a>)}
+          <a class="lang-switch" href={oppositeUrl(Astro.url.pathname)} data-lang={oppositeLang}>{isZh ? 'English' : '中文'}</a>
         </nav>
       </div>
     </header>
@@ -104,6 +135,10 @@ function oppositeUrl(pathname: string): string {
         <span class="footer-privacy">{isZh ? '本地处理 · 文件不离开设备' : 'Local processing · files never leave your device'}</span>
       </div>
     </footer>
+    <script>
+      import '../scripts/mobile-menu';
+      import '../scripts/lang-switch';
+    </script>
   </body>
 </html>
 
@@ -169,10 +204,63 @@ function oppositeUrl(pathname: string): string {
     flex-wrap: wrap;
     gap: 8px;
   }
+  .menu-toggle {
+    display: none;
+  }
+  .mobile-menu {
+    display: none;
+  }
   @media (max-width: 640px) {
-    .site-nav {
+    .site-nav--desktop {
+      display: none;
+    }
+    .menu-toggle {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+    }
+    .menu-toggle:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .menu-toggle__bar {
+      width: 22px;
+      height: 2px;
+      background: var(--ink);
+      border-radius: 1px;
+    }
+    .mobile-menu[hidden] {
+      display: none;
+    }
+    .mobile-menu:not([hidden]) {
+      display: block;
+      position: absolute;
+      top: 60px;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      padding: 16px;
+      z-index: 20;
+    }
+    .mobile-menu__nav {
+      display: flex;
+      flex-direction: column;
       gap: 12px;
-      font-size: 13px;
+    }
+    .mobile-menu__nav a {
+      color: var(--ink);
+      font-weight: 500;
+      font-size: 15px;
+    }
+    .mobile-menu__nav .lang-switch {
+      display: inline-block;
+      width: fit-content;
     }
   }
 </style>

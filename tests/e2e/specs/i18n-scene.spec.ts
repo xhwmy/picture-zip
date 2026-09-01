@@ -28,22 +28,22 @@ const PAGES = [
 test.describe('国际化与场景落地页', () => {
   test('语言切换：英文页有中文切换链接', async ({ page }) => {
     await page.goto('/');
-    const langSwitch = page.locator('a', { hasText: '中文' });
+    const langSwitch = page.locator('.site-nav--desktop a', { hasText: '中文' });
     await expect(langSwitch).toBeVisible();
   });
 
-  test('中文路由生效：访问 /zh/ 时 html lang 为 zh', async ({ page }) => {
+  test('中文路由生效：访问 /zh/ 时 html lang 为 zh-CN', async ({ page }) => {
     const staticPage = createStaticPage(page);
     await staticPage.goto('/zh/');
     const lang = await staticPage.getLang();
-    expect(lang).toBe('zh');
+    expect(lang).toBe('zh-CN');
   });
 
-  test('英文路由生效：访问 / 时 html lang 为 en', async ({ page }) => {
+  test('英文路由生效：访问 / 时 html lang 为 en-US', async ({ page }) => {
     const staticPage = createStaticPage(page);
     await staticPage.goto('/');
     const lang = await staticPage.getLang();
-    expect(lang).toBe('en');
+    expect(lang).toBe('en-US');
   });
 
   test('场景页预设参数：访问 /png-to-webp 时输出格式预置为 WebP', async ({ page }) => {
@@ -67,18 +67,52 @@ test.describe('国际化与场景落地页', () => {
 
   test('hreflang 互链：英文页 head 含指向中文版的 hreflang 标签', async ({ page }) => {
     await page.goto('/');
-    const hreflangZh = page.locator('link[rel=alternate][hreflang=zh]');
+    const hreflangZh = page.locator('link[rel=alternate][hreflang=zh-CN]');
     await expect(hreflangZh).toHaveCount(1);
   });
 
   test('hreflang 互链：中文页 head 含指向英文版的 hreflang 标签', async ({ page }) => {
     await page.goto('/zh/');
-    const hreflangEn = page.locator('link[rel=alternate][hreflang=en]');
+    const hreflangEn = page.locator('link[rel=alternate][hreflang=en-US]');
     await expect(hreflangEn).toHaveCount(1);
   });
 
   test('隐私声明存在：工具页包含本地处理声明', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('.uploader__privacy')).toBeVisible();
+  });
+
+  test('中文页组件文案同步：/zh/ 设置面板显示中文标题', async ({ page }) => {
+    await page.goto('/zh/');
+    await page.waitForSelector('.tool');
+    const toggle = page.locator('.settings__toggle span[aria-hidden="true"]').first();
+    await expect(toggle).toHaveText('压缩设置');
+  });
+
+  test('英文页组件文案同步：/ 设置面板显示英文标题', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('.tool');
+    const toggle = page.locator('.settings__toggle span[aria-hidden="true"]').first();
+    await expect(toggle).toHaveText('Compression settings');
+  });
+
+  test('语言切换后组件同步：从 / 点击中文跳转 /zh/ 后显示中文', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('.tool');
+    await page.locator('a.lang-switch').first().click();
+    await page.waitForURL('**/zh/');
+    await page.waitForSelector('.tool');
+    const toggle = page.locator('.settings__toggle span[aria-hidden="true"]').first();
+    await expect(toggle).toHaveText('压缩设置');
+  });
+
+  test('语言切换后组件同步：从 /zh/ 点击 English 跳转 / 后显示英文', async ({ page }) => {
+    await page.goto('/zh/');
+    await page.waitForSelector('.tool');
+    await page.locator('a.lang-switch').first().click();
+    await page.waitForURL('**/');
+    await page.waitForSelector('.tool');
+    const toggle = page.locator('.settings__toggle span[aria-hidden="true"]').first();
+    await expect(toggle).toHaveText('Compression settings');
   });
 });

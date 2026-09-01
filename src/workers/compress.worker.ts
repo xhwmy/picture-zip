@@ -1,7 +1,13 @@
 /// <reference lib="webworker" />
-import { compressBuffer } from '../lib/compress';
+import { compressBuffer, compressGifAnimated } from '../lib/compress';
 import { compressToTargetSize } from '../lib/targetSize';
 import type { CompressOutput, WorkerRequest, WorkerResponse } from '../lib/types';
+
+function isGif(mimeType: string, buffer: ArrayBuffer): boolean {
+  if (mimeType === 'image/gif') return true;
+  const bytes = new Uint8Array(buffer.slice(0, 4));
+  return bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38;
+}
 
 function toCompressOutput(
   buffer: ArrayBuffer,
@@ -33,7 +39,9 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
   try {
     let result: CompressOutput;
 
-    if (msg.type === 'targetSize' && msg.targetKB !== undefined) {
+    if (isGif(msg.mimeType, msg.buffer) && msg.type === 'compress') {
+      result = await compressGifAnimated(msg.buffer, { quality: msg.quality });
+    } else if (msg.type === 'targetSize' && msg.targetKB !== undefined) {
       const r = await compressToTargetSize(msg.buffer, msg.mimeType, msg.targetKB, {
         format: msg.format,
         maxWidth: msg.maxWidth,

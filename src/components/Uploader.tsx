@@ -1,15 +1,18 @@
 import { useRef, useState } from 'preact/hooks';
 import { t } from '../lib/i18n';
+import { formatBytes } from '../lib/format';
 
 interface UploaderProps {
   onFiles: (files: File[]) => void;
   disabled?: boolean;
+  fileCount?: number;
+  totalSize?: number;
 }
 
 const LARGE_FILE_THRESHOLD = 80 * 1024 * 1024;
 const MANY_FILES_THRESHOLD = 200;
 
-export function Uploader({ onFiles, disabled }: UploaderProps) {
+export function Uploader({ onFiles, disabled, fileCount = 0, totalSize = 0 }: UploaderProps) {
   const [dragging, setDragging] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -43,7 +46,7 @@ export function Uploader({ onFiles, disabled }: UploaderProps) {
 
   return (
     <div class="uploader">
-      <div
+      <label
         class={`dropzone${dragging ? ' dropzone--dragging' : ''}${disabled ? ' dropzone--disabled' : ''}`}
         onDragOver={(e) => {
           e.preventDefault();
@@ -51,16 +54,16 @@ export function Uploader({ onFiles, disabled }: UploaderProps) {
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
-        onClick={() => !disabled && fileInput.current?.click()}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            fileInput.current?.click();
-          }
-        }}
       >
+        <input
+          ref={fileInput}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif"
+          multiple
+          class="visually-hidden"
+          onChange={onInput}
+          disabled={disabled}
+        />
         <svg width="44" height="44" viewBox="0 0 64 64" aria-hidden="true" class="dropzone__icon">
           <rect width="64" height="64" rx="32" fill="#eff6ff" />
           <path d="M32 18l10 10-4 4-4-4v14h-4V28l-4 4-4-4z" fill="#2563eb" />
@@ -68,32 +71,28 @@ export function Uploader({ onFiles, disabled }: UploaderProps) {
         </svg>
         <p class="dropzone__title">{t('uploader.title')}</p>
         <p class="dropzone__subtitle">{t('uploader.subtitle')}</p>
-        <div class="dropzone__actions" onClick={(e) => e.stopPropagation()}>
-          <input
-            ref={fileInput}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif"
-            multiple
-            class="visually-hidden"
-            onChange={onInput}
-          />
-          <input
-            ref={folderInput}
-            type="file"
-            // @ts-expect-error webkitdirectory is not typed
-            webkitdirectory=""
-            multiple
-            class="visually-hidden"
-            onChange={onInput}
-          />
-          <button class="btn btn--primary" type="button" onClick={() => fileInput.current?.click()}>
-            {t('uploader.subtitle')}
-          </button>
-          <button class="btn btn--ghost" type="button" onClick={() => folderInput.current?.click()}>
-            {t('uploader.folder')}
-          </button>
-        </div>
+      </label>
+
+      <div class="uploader__actions">
+        <input
+          ref={folderInput}
+          type="file"
+          // @ts-expect-error webkitdirectory is not typed
+          webkitdirectory=""
+          multiple
+          class="visually-hidden"
+          onChange={onInput}
+        />
+        <button class="btn btn--ghost" type="button" onClick={() => folderInput.current?.click()} disabled={disabled}>
+          {t('uploader.folder')}
+        </button>
       </div>
+
+      {fileCount > 0 && (
+        <div class="uploader__stats">
+          <span class="uploader__count">{t('uploader.count', { count: fileCount, size: formatBytes(totalSize) })}</span>
+        </div>
+      )}
       {notice && <div class="uploader__notice">{notice}</div>}
       <p class="uploader__privacy">
         <span aria-hidden="true">🔒</span> {t('uploader.privacy')}

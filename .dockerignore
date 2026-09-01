@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+
+# Dependencies (will be installed fresh in Docker)
+node_modules
+
+# Build output (will be built fresh in Docker)
+dist
+
+# Test files
+tests/
+test-results/
+playwright-report/
+.lighthouseci/
+
+# Documentation (not needed in runtime image)
+DEVELOPMENT-SPEC.md
+*.md
+
+# Docker files (avoid recursive context)
+docker/Dockerfile
+docker/docker-compose.yml
+docker/Caddyfile
+
+# Environment files (security)
+.env
+.env.*
+.env.local
+
+# IDE and OS files
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Screenshots and temporary files
+screenshot.cjs
+check-page.cjs
+serve.cjs
+
+# Code analysis tools
+.codeartsdoer
+.codegraph

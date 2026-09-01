@@ -9,18 +9,46 @@ const targetKB = 200;
   description={`免费将任意图片压缩到 ${targetKB}KB 以内，全程本地处理，文件不上传。`}
   heading="图片压缩到"
   highlight={`${targetKB}KB`}
-  subtitle={`精确压到 ≤ ${targetKB}KB，适合电商主图、社交媒体等——全程本地，不上传。`}
+  subtitle={`精确压到 ≤ ${targetKB}KB，适合电商平台和社交媒体——全程本地，不上传。`}
   initialSettings={{ targetSizeKB: targetKB }}
   webAppName={`图片压缩 — 压到 ${targetKB}KB`}
   webAppUrl={`https://picture-zip.com/zh/compress-to-${targetKB}kb/`}
+  inputFormats={['JPEG', 'PNG', 'WebP', 'GIF（仅静态）', 'AVIF', 'HEIC']}
+  outputFormats={['JPEG', 'WebP', 'PNG', 'AVIF']}
+  platforms={[
+    '桌面：Chrome、Firefox、Edge、Safari',
+    '移动端：iOS Safari 16.4+、Android Chrome 100+',
+    '无需注册或登录',
+  ]}
+  steps={[
+    `将图片拖入上传区域——目标大小已预设为 ${targetKB}KB。`,
+    '工具自动调节质量以达到目标文件大小。',
+    '仅在质量无法达标时才降低分辨率。',
+    '单个下载或批量打包 ZIP 下载。',
+  ]}
+  useCases={[
+    `压缩产品图片用于要求 ≤${targetKB}KB 的电商平台`,
+    '优化社交媒体帖子和广告图片',
+    '减小图片体积用于内容管理系统',
+    '准备在线市场（Amazon、eBay、Shopee）的图片',
+  ]}
+  limitations={[
+    'GIF 不支持目标大小模式（自动禁用）',
+    '批量处理：队列中所有图片都会压缩到相同目标',
+    '200KB 对大多数网页图片质量良好',
+  ]}
   faqs={[
     {
       q: `如何把图片压到 ${targetKB}KB？`,
       a: `拖入图片，目标大小模式会自动调节质量（必要时降低分辨率），直到文件 ≤ ${targetKB}KB。`,
     },
     {
-      q: '可以批量压到目标大小吗？',
-      a: '可以。添加任意数量图片，全部压到目标体积后可一次性打包 ZIP 下载。',
+      q: '可以批量压缩到目标大小吗？',
+      a: '可以。添加任意数量图片，它们都会被压缩到目标大小，然后一次性打包 ZIP 下载。',
+    },
+    {
+      q: '200KB 目标最佳格式是什么？',
+      a: '照片推荐 JPEG。WebP 在相同质量下通常更小。PNG 适合有透明需求的图片但大图可能无法压到 200KB。',
     },
   ]}
 />

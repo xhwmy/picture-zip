@@ -5,13 +5,37 @@ import ToolScene from '../../components/ToolScene.astro';
 <ToolScene
   lang="zh"
   title="HEIC 转 JPG — 免费本地处理"
-  description="免费在线将 HEIC 转为 JPG，全程本地处理，文件不上传，iPhone 照片随处可用。"
+  description="免费在线将 HEIC 转为 JPG，通过 WebAssembly 在浏览器内解码，全程本地处理，文件不上传。"
   heading="HEIC 转 JPG"
   highlight="转换器"
-  subtitle="将 iPhone 的 HEIC 照片在浏览器本地转为 JPG——不上传，随处可用。"
+  subtitle="通过 WebAssembly 在浏览器内将 iPhone 的 HEIC 照片转为 JPG——不上传，支持 Chrome、Firefox、Edge 和 Safari。"
   initialSettings={{ format: 'jpeg' }}
   webAppName="HEIC 转 JPG 转换器"
   webAppUrl="https://picture-zip.com/zh/heic-to-jpg/"
+  inputFormats={['HEIC（iPhone/iPad）', 'HEIF', 'HEIX', 'HEVC']}
+  outputFormats={['JPG（推荐）', 'WebP', 'PNG']}
+  platforms={[
+    '桌面：Chrome、Firefox、Edge、Safari',
+    '移动端：iOS Safari 16.4+、Android Chrome 100+',
+    '无需浏览器原生支持 HEIC——通过 WASM 解码',
+  ]}
+  steps={[
+    '将 HEIC 照片拖入上传区域，或点击选择文件。',
+    '工具自动检测 HEIC 格式并使用 WASM 解码器。',
+    '输出格式预设为 JPG，如需可改为 WebP 或 PNG。',
+    '单击下载或点击全部下载 (ZIP) 批量转换。',
+  ]}
+  useCases={[
+    '将 iPhone HEIC 照片转为 Windows 可打开的 JPG',
+    '批量转换 HEIC 照片用于上传表格和政府门户网站',
+    '准备 HEIC 照片用于邮件附件（JPG 兼容性更好）',
+    '将 HEIC 转换为不支持 HEIC 的网站和应用的格式',
+  ]}
+  limitations={[
+    'HEIC 仅支持输入——无法输出为 HEIC 格式',
+    '大型 HEIC 文件（10MB+）可能需要 5-10 秒解码',
+    'HEIC 连拍照片和实况照片仅转换为单张图片',
+  ]}
   faqs={[
     {
       q: '什么是 HEIC？',
@@ -19,7 +43,15 @@ import ToolScene from '../../components/ToolScene.astro';
     },
     {
       q: 'HEIC 会被上传吗？',
-      a: '不会。转换全程在浏览器本地完成，照片绝不离开你的设备。',
+      a: '不会。转换全程在浏览器内通过 WebAssembly 完成，照片绝不离开你的设备。',
+    },
+    {
+      q: '哪些浏览器支持 HEIC 转换？',
+      a: '所有支持 WebAssembly 的现代浏览器——Chrome、Firefox、Edge 和 Safari。解码通过 libheif WASM 在浏览器内完成，无需浏览器原生支持 HEIC。',
+    },
+    {
+      q: '会保留 EXIF 元数据吗？',
+      a: '转换过程中不保留 EXIF 元数据，工具专注于像素数据和压缩质量。',
     },
   ]}
 />

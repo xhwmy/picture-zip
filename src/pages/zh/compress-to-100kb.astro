@@ -13,6 +13,30 @@ const targetKB = 100;
   initialSettings={{ targetSizeKB: targetKB }}
   webAppName={`图片压缩 — 压到 ${targetKB}KB`}
   webAppUrl={`https://picture-zip.com/zh/compress-to-${targetKB}kb/`}
+  inputFormats={['JPEG', 'PNG', 'WebP', 'GIF（仅静态）', 'AVIF', 'HEIC']}
+  outputFormats={['JPEG（推荐用于照片）', 'WebP', 'PNG', 'AVIF']}
+  platforms={[
+    '桌面：Chrome、Firefox、Edge、Safari',
+    '移动端：iOS Safari 16.4+、Android Chrome 100+',
+    '无需注册或登录',
+  ]}
+  steps={[
+    `将图片拖入上传区域——目标大小已预设为 ${targetKB}KB。`,
+    '工具使用二分搜索找到能压到目标体积以内的最高质量。',
+    '如需要，会等比降低分辨率（最低 300×300）以达标。',
+    '下载结果——显示"达标 ✓"和实际文件大小。',
+  ]}
+  useCases={[
+    `压缩证件/护照照片用于要求 ≤${targetKB}KB 的政府门户`,
+    '减小图片体积用于在线报名表单',
+    '优化邮件附件以控制附件大小',
+    '准备论坛头像或个人资料图片',
+  ]}
+  limitations={[
+    'GIF 不支持目标大小模式（自动禁用）',
+    '若分辨率已达最低（300×300）仍无法达标，返回最小可达结果',
+    '极小目标（10KB 以下）可能导致画质极低',
+  ]}
   faqs={[
     {
       q: `如何把图片压到 ${targetKB}KB？`,
@@ -25,6 +49,10 @@ const targetKB = 100;
     {
       q: '图片会被上传吗？',
       a: '不会。所有处理都在浏览器本地通过 WebAssembly 完成，文件绝不离开你的设备。',
+    },
+    {
+      q: '如果图片无法压到目标怎么办？',
+      a: '工具返回最小可达结果并显示实际大小、质量和分辨率。可尝试其他输出格式（JPEG 通常最小）。',
     },
   ]}
 />

@@ -8,6 +8,23 @@ import { SettingsPanel } from './SettingsPanel';
 import { QueueList } from './QueueList';
 import { ZipButton } from './ZipButton';
 
+function getBrowserSupportIssue(): string | null {
+  const hasCanvas = typeof document !== 'undefined' && typeof HTMLCanvasElement !== 'undefined';
+  const hasImageBitmap = typeof createImageBitmap !== 'undefined';
+  const hasOffscreen = typeof OffscreenCanvas !== 'undefined';
+
+  if (!hasCanvas) {
+    return t('error.noCanvas');
+  }
+  if (!hasImageBitmap && !hasOffscreen) {
+    return t('error.noCreateImageBitmap');
+  }
+  if (!hasOffscreen && !hasImageBitmap) {
+    return t('error.unsupportedBrowser');
+  }
+  return null;
+}
+
 interface ImageToolProps {
   initialSettings?: Partial<CompressSettings>;
   targetModeDisabled?: boolean;
@@ -64,6 +81,22 @@ export function ImageTool({ initialSettings, targetModeDisabled }: ImageToolProp
     return items.some((i) => i.status === 'done' && i.result && !downloadedIds.has(i.id));
   }, [items, downloadedIds]);
 
+  const hasGif = useMemo(() => {
+    return items.some((i) => i.file.type === 'image/gif' || /\.gif$/i.test(i.file.name));
+  }, [items]);
+
+  const uploadStats = useMemo(() => {
+    let count = 0;
+    let totalSize = 0;
+    for (const item of items) {
+      if (item.status !== 'skipped' && item.status !== 'failed' && item.status !== 'cancelled') {
+        count += 1;
+        totalSize += item.originalSize;
+      }
+    }
+    return { count, totalSize };
+  }, [items]);
+
   useEffect(() => {
     function onBeforeUnload(event: BeforeUnloadEvent) {
       if (!hasUndownloaded) return;
@@ -100,14 +133,22 @@ export function ImageTool({ initialSettings, targetModeDisabled }: ImageToolProp
 
   return (
     <div class="tool">
+      {getBrowserSupportIssue() && (
+        <div class="tool__error">{getBrowserSupportIssue()}</div>
+      )}
       <div class="tool__layout">
         <aside class="tool__side">
           <SettingsPanel
             settings={settings}
             onChange={setSettings}
-            targetModeDisabled={targetModeDisabled}
+            targetModeDisabled={targetModeDisabled || hasGif}
+            hasGif={hasGif}
           />
-          <Uploader onFiles={handleFiles} />
+          <Uploader
+            onFiles={handleFiles}
+            fileCount={uploadStats.count}
+            totalSize={uploadStats.totalSize}
+          />
         </aside>
 
         <section class="tool__main">

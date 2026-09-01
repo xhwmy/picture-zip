@@ -4,6 +4,7 @@ import type {
   WorkerRequest,
   WorkerResponse,
 } from './types';
+import type { CompressOutput } from './types';
 
 const ACCEPTED_TYPES = new Set([
   'image/jpeg',
@@ -47,7 +48,7 @@ export interface QueueController {
 type Listener = (items: readonly QueueItem[]) => void;
 
 interface WorkerHandle {
-  worker: Worker;
+  worker: Worker | PseudoWorker;
   busy: boolean;
 }
 
@@ -60,6 +61,102 @@ function isValidFile(file: File): boolean {
   if (ACCEPTED_TYPES.has(file.type)) return true;
   const lower = file.name.toLowerCase();
   return /\.(jpe?g|png|webp|gif|avif|heic|heif)$/.test(lower);
+}
+
+function isGifBytes(buffer: ArrayBuffer): boolean {
+  if (buffer.byteLength < 4) return false;
+  const bytes = new Uint8Array(buffer.slice(0, 4));
+  return bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38;
+}
+
+function canUseOffscreenWorker(): boolean {
+  return typeof OffscreenCanvas !== 'undefined' && typeof createImageBitmap !== 'undefined';
+}
+
+interface PseudoWorker {
+  postMessage(message: WorkerRequest, transfer?: StructuredSerializeOptions): void;
+  onmessage: ((event: MessageEvent<WorkerResponse>) => void) | null;
+  onerror: ((event: ErrorEvent) => void) | null;
+  terminate(): void;
+}
+
+class MainThreadCompressWorker implements PseudoWorker {
+  onmessage: ((event: MessageEvent<WorkerResponse>) => void) | null = null;
+  onerror: ((event: ErrorEvent) => void) | null = null;
+  private terminated = false;
+
+  async postMessage(message: WorkerRequest, _transfer?: StructuredSerializeOptions): Promise<void> {
+    if (this.terminated) return;
+    try {
+      const result = await this.processRequest(message);
+      if (this.terminated) return;
+      const response: WorkerResponse = { type: 'success', id: message.id, result };
+      this.onmessage?.({ data: response } as MessageEvent<WorkerResponse>);
+    } catch (err) {
+      if (this.terminated) return;
+      const code = err instanceof Error && 'code' in err ? (err as { code?: string }).code : undefined;
+      const response: WorkerResponse = {
+        type: 'error',
+        id: message.id,
+        error: err instanceof Error ? err.message : String(err),
+        code,
+      };
+      this.onmessage?.({ data: response } as MessageEvent<WorkerResponse>);
+    }
+  }
+
+  terminate(): void {
+    this.terminated = true;
+  }
+
+  private async processRequest(msg: WorkerRequest): Promise<CompressOutput> {
+    const { compressBuffer, compressGifAnimated } = await import('./compress');
+    const { compressToTargetSize } = await import('./targetSize');
+
+    const isGif = msg.mimeType === 'image/gif' || isGifBytes(msg.buffer);
+
+    if (isGif && msg.type === 'compress') {
+      return compressGifAnimated(msg.buffer, { quality: msg.quality });
+    }
+
+    if (msg.type === 'targetSize' && msg.targetKB !== undefined) {
+      const r = await compressToTargetSize(msg.buffer, msg.mimeType, msg.targetKB, {
+        format: msg.format,
+        maxWidth: msg.maxWidth,
+        maxHeight: msg.maxHeight,
+      });
+      return {
+        buffer: r.buffer,
+        mimeType: r.mimeType,
+        extension: r.extension,
+        byteLength: r.buffer.byteLength,
+        width: r.width,
+        height: r.height,
+        qualityUsed: r.qualityUsed,
+        resized: r.resized,
+        targetReached: r.targetReached,
+        originalByteLength: r.originalByteLength,
+      };
+    }
+
+    const r = await compressBuffer(msg.buffer, msg.mimeType, {
+      format: msg.format,
+      quality: msg.quality,
+      maxWidth: msg.maxWidth,
+      maxHeight: msg.maxHeight,
+    });
+    return {
+      buffer: r.buffer,
+      mimeType: r.mimeType,
+      extension: r.extension,
+      byteLength: r.buffer.byteLength,
+      width: r.width,
+      height: r.height,
+      qualityUsed: r.qualityUsed,
+      resized: r.resized,
+      originalByteLength: r.originalByteLength,
+    };
+  }
 }
 
 export function createQueue(
@@ -94,10 +191,15 @@ export function createQueue(
   }
 
   function makeWorker(): WorkerHandle {
-    const worker = new Worker(
-      new URL('../workers/compress.worker.ts', import.meta.url),
-      { type: 'module' },
-    );
+    let worker: Worker | PseudoWorker;
+    if (canUseOffscreenWorker()) {
+      worker = new Worker(
+        new URL('../workers/compress.worker.ts', import.meta.url),
+        { type: 'module' },
+      );
+    } else {
+      worker = new MainThreadCompressWorker();
+    }
     const handle: WorkerHandle = { worker, busy: false };
     handle.worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
       onMessage(handle, event.data);
@@ -113,6 +215,12 @@ export function createQueue(
         activeByWorker.delete(handle);
       }
       handle.busy = false;
+      try {
+        handle.worker.terminate();
+      } catch {
+        // ignore
+      }
+      replaceWorker(handle);
       emit();
       dispatch();
     };
@@ -165,7 +273,9 @@ export function createQueue(
 
     const item = activeId ? itemsById.get(activeId) : undefined;
     if (item) {
-      if (msg.type === 'success') {
+      if (item.status === 'cancelled') {
+        // discard result from cancelled task
+      } else if (msg.type === 'success') {
         item.result = msg.result;
         item.status = 'done';
       } else {
@@ -199,14 +309,19 @@ export function createQueue(
           idle.busy = false;
           continue;
         }
+        const gif = isGifBytes(buffer);
+        const wantsTarget = settings.targetSizeKB !== undefined;
+        const useTarget = wantsTarget && !gif;
+        item.gifTargetBypassed = wantsTarget && gif;
+        item.gifSizeBypassed = gif && (settings.maxWidth !== undefined || settings.maxHeight !== undefined);
         const request: WorkerRequest = {
-          type: settings.targetSizeKB !== undefined ? 'targetSize' : 'compress',
+          type: useTarget ? 'targetSize' : 'compress',
           id,
           buffer,
           mimeType: item.file.type,
           format: settings.format,
           quality: settings.quality,
-          targetKB: settings.targetSizeKB,
+          targetKB: useTarget ? settings.targetSizeKB : undefined,
           maxWidth: settings.maxWidth,
           maxHeight: settings.maxHeight,
         };
@@ -269,6 +384,23 @@ export function createQueue(
           item.errorReason = 'cancelled';
         }
       }
+      for (const [handle, activeId] of activeByWorker) {
+        const item = itemsById.get(activeId);
+        if (item && item.status === 'processing') {
+          item.status = 'cancelled';
+          item.errorReason = 'cancelled';
+        }
+        clearTimeout(timeouts.get(handle));
+        timeouts.delete(handle);
+        try {
+          handle.worker.terminate();
+        } catch {
+          // ignore
+        }
+        replaceWorker(handle);
+        activeByWorker.delete(handle);
+        handle.busy = false;
+      }
       emit();
     },
 
@@ -318,6 +450,10 @@ export function createQueue(
 
     dispose() {
       disposed = true;
+      for (const timer of timeouts.values()) {
+        clearTimeout(timer);
+      }
+      timeouts.clear();
       for (const handle of workers) {
         try {
           handle.worker.terminate();

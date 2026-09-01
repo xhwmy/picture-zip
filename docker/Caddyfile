@@ -1,33 +1,43 @@
-# Caddy 2 — automatic HTTPS + HSTS, reverse-proxies to the static web container
+# Caddy 2 - automatic HTTPS and reverse proxy for the production stack.
 {
     email admin@picture-zip.com
 }
 
-picture-zip.com, www.picture-zip.com {
-    encode zstd gzip
-
+# Shared baseline security headers applied to every public host.
+# Per-host CSP stays in the host block (third-party apps like umami and
+# uptime-kuma need their own inline-script policy).
+(security_headers) {
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         X-Content-Type-Options "nosniff"
         X-Frame-Options "SAMEORIGIN"
         Referrer-Policy "strict-origin-when-cross-origin"
-        # CSP: self + wasm-unsafe-eval for the codecs; umami self-hosted later
-        Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+        Permissions-Policy "geolocation=(), microphone=(), camera=()"
     }
-
-    reverse_proxy web:80
-
-    # www -> apex
-    @www host www.picture-zip.com
-    redir @www https://picture-zip.com{uri} permanent
 }
 
-# Self-hosted analytics (umami) on a subdomain
+picture-zip.com, www.picture-zip.com {
+    encode zstd gzip
+    import security_headers
+    header {
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://analytics.picture-zip.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://analytics.picture-zip.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+    }
+
+    @www host www.picture-zip.com
+    redir @www https://picture-zip.com{uri} permanent
+    reverse_proxy web:80
+}
+
 analytics.picture-zip.com {
+    import security_headers
     reverse_proxy umami:3000
 }
 
-# Public status page
+# Uptime Kuma includes an administration UI, so never expose it without auth.
 status.picture-zip.com {
+    import security_headers
+    basic_auth {
+        status_user {$STATUS_BCRYPT_HASH}
+    }
     reverse_proxy uptime-kuma:3001
 }

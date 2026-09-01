@@ -9,6 +9,7 @@ receivers:
   - name: telegram
     telegram_configs:
       - api_url: https://api.telegram.org
-        bot_token: "${TELEGRAM_BOT_TOKEN}"
-        chat_id: "${TELEGRAM_CHAT_ID}"
+        # These are expanded by Alertmanager when launched with --config.expand-env
+        bot_token: "$TELEGRAM_BOT_TOKEN"
+        chat_id: "$TELEGRAM_CHAT_ID"
         send_resolved: true

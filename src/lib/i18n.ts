@@ -6,11 +6,21 @@ export type Lang = 'en' | 'zh';
 
 const messages: Record<Lang, Record<string, string>> = { en, zh };
 
-function readInitialLang(): Lang {
-  if (typeof window !== 'undefined') {
-    const forced = (window as unknown as { __LANG__?: string }).__LANG__;
-    if (forced === 'en' || forced === 'zh') return forced;
+export function readInitialLang(): Lang {
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const pref = localStorage.getItem('pz-lang-pref');
+      if (pref === 'zh' || pref === 'en') return pref;
+    } catch {
+      // ignore
+    }
   }
+
+  if (typeof window !== 'undefined' && typeof window.location !== 'undefined') {
+    const path = window.location.pathname;
+    if (path.startsWith('/zh')) return 'zh';
+  }
+
   if (typeof navigator !== 'undefined') {
     const nav = navigator.language || (navigator as unknown as { userLanguage?: string }).userLanguage || '';
     if (nav.toLowerCase().startsWith('zh')) return 'zh';
@@ -28,6 +38,9 @@ export function getLang(): Lang {
 export function setLang(lang: Lang): void {
   if (currentLang === lang) return;
   currentLang = lang;
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('pz-lang-pref', lang);
+  }
   for (const listener of listeners) {
     listener();
   }

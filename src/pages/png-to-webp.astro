@@ -11,6 +11,30 @@ import ToolScene from '../components/ToolScene.astro';
   initialSettings={{ format: 'webp' }}
   webAppName="PNG to WebP Converter"
   webAppUrl="https://picture-zip.com/png-to-webp/"
+  inputFormats={['PNG (8-bit)', 'PNG (24-bit)', 'PNG (32-bit with alpha)']}
+  outputFormats={['WebP (lossy + alpha)', 'WebP (lossless)', 'PNG (optimized)', 'AVIF']}
+  platforms={[
+    'Desktop: Chrome, Firefox, Edge, Safari',
+    'Mobile: iOS Safari 16.4+, Android Chrome 100+',
+    'Works offline once the page is loaded',
+  ]}
+  steps={[
+    'Drag and drop your PNG file(s) onto the upload area.',
+    'Output format is pre-set to WebP. Adjust quality with the slider if needed.',
+    'Transparency (alpha channel) is automatically preserved.',
+    'Download individually or as a ZIP for batch conversions.',
+  ]}
+  useCases={[
+    'Reduce PNG file size for web performance (Lighthouse / Core Web Vitals)',
+    'Batch-convert logos and icons with transparent backgrounds',
+    'Optimize product images for e-commerce platforms',
+    'Shrink PNG screenshots for email or messaging',
+  ]}
+  limitations={[
+    'WebP lossy mode may slightly reduce quality at low settings — use quality 80+ for near-lossless',
+    'Animated PNG (APNG) is not currently supported as input',
+    'Very large PNGs (50MP+) may require significant memory',
+  ]}
   faqs={[
     {
       q: 'Does PNG to WebP keep transparency?',
@@ -23,6 +47,10 @@ import ToolScene from '../components/ToolScene.astro';
     {
       q: 'Can I convert multiple PNGs at once?',
       a: 'Yes. Drag in as many PNGs as you like, convert them all, and download them together as a ZIP.',
+    },
+    {
+      q: 'What quality should I use?',
+      a: 'For most images, quality 75-80 provides an excellent balance of file size and visual quality. For screenshots with text, use 85+.',
     },
   ]}
 />

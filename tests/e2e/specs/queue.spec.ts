@@ -54,7 +54,7 @@ test.describe('批量处理与队列控制', () => {
     await tool.cancelAll();
     await tool.waitForAllDone();
     const card = tool.getResultCard(0);
-    await expect(card.root).toHaveClass(/result-card--(skipped|done|failed)/, { timeout: 10000 });
+    await expect(card.root).toHaveClass(/result-card--(skipped|done|failed|cancelled)/, { timeout: 10000 });
   });
 
   test('暂停/继续按钮存在：导入图片后暂停/取消按钮可点击', async ({ page }) => {

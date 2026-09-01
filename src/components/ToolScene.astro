@@ -19,6 +19,12 @@ interface Props {
   faqs?: Faq[];
   webAppName?: string;
   webAppUrl?: string;
+  useCases?: string[];
+  steps?: string[];
+  inputFormats?: string[];
+  outputFormats?: string[];
+  platforms?: string[];
+  limitations?: string[];
 }
 
 const {
@@ -33,6 +39,12 @@ const {
   faqs = [],
   webAppName,
   webAppUrl,
+  useCases = [],
+  steps = [],
+  inputFormats = [],
+  outputFormats = [],
+  platforms = [],
+  limitations = [],
 } = Astro.props;
 
 const isZh = lang === 'zh';
@@ -86,6 +98,83 @@ const faqLd =
     <ImageTool client:only="preact" initialSettings={initialSettings} targetModeDisabled={targetModeDisabled} />
   </section>
 
+  {(useCases.length > 0 || steps.length > 0) && (
+    <section class="container info-section">
+      {steps.length > 0 && (
+        <div class="card info-card">
+          <h2>{isZh ? '使用步骤' : 'How to use'}</h2>
+          <ol class="info-steps">
+            {steps.map((step, i) => (
+              <li class="info-step">
+                <span class="info-step__num">{i + 1}</span>
+                <span class="info-step__text">{step}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {useCases.length > 0 && (
+        <div class="card info-card">
+          <h2>{isZh ? '适用场景' : 'Use cases'}</h2>
+          <ul class="info-list">
+            {useCases.map((uc) => (
+              <li>{uc}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  )}
+
+  {(inputFormats.length > 0 || outputFormats.length > 0 || platforms.length > 0 || limitations.length > 0) && (
+    <section class="container info-section">
+      {inputFormats.length > 0 && (
+        <div class="card info-card">
+          <h2>{isZh ? '支持的输入格式' : 'Supported input formats'}</h2>
+          <div class="format-tags">
+            {inputFormats.map((f) => (
+              <span class="format-tag">{f}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {outputFormats.length > 0 && (
+        <div class="card info-card">
+          <h2>{isZh ? '输出格式' : 'Output formats'}</h2>
+          <div class="format-tags">
+            {outputFormats.map((f) => (
+              <span class="format-tag format-tag--accent">{f}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {platforms.length > 0 && (
+        <div class="card info-card">
+          <h2>{isZh ? '适用平台' : 'Supported platforms'}</h2>
+          <ul class="info-list">
+            {platforms.map((p) => (
+              <li>{p}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {limitations.length > 0 && (
+        <div class="card info-card">
+          <h2>{isZh ? '限制说明' : 'Limitations'}</h2>
+          <ul class="info-list">
+            {limitations.map((l) => (
+              <li>{l}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  )}
+
   {faqs.length > 0 && (
     <section class="container faq">
       <h2>{isZh ? '常见问题' : 'Frequently asked questions'}</h2>
@@ -131,6 +220,75 @@ const faqLd =
     margin-top: -28px;
     position: relative;
   }
+  .info-section {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  .info-card {
+    margin: 0;
+  }
+  .info-card h2 {
+    font-size: 18px;
+    margin-bottom: 14px;
+  }
+  .info-steps {
+    list-style: none;
+    counter-reset: none;
+    margin: 0;
+    padding: 0;
+  }
+  .info-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .info-step__num {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .info-step__text {
+    color: var(--muted);
+    font-size: 14px;
+    padding-top: 4px;
+  }
+  .info-list {
+    margin: 0;
+    padding: 0 0 0 18px;
+  }
+  .info-list li {
+    margin: 6px 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .format-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .format-tag {
+    padding: 5px 12px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .format-tag--accent {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
   .faq {
     margin-top: 48px;
     max-width: 720px;
@@ -156,6 +314,9 @@ const faqLd =
     }
     .hero {
       padding: 40px 0 52px;
+    }
+    .info-section {
+      grid-template-columns: 1fr;
     }
   }
 </style>

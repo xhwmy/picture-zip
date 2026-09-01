@@ -78,7 +78,7 @@ export type WorkerResponse =
   | { type: 'success'; id: string; result: CompressOutput }
   | { type: 'error'; id: string; error: string; code?: string };
 
-export type TaskStatus = 'pending' | 'processing' | 'done' | 'failed' | 'skipped';
+export type TaskStatus = 'pending' | 'processing' | 'done' | 'failed' | 'skipped' | 'cancelled';
 
 export interface QueueItem {
   id: string;
@@ -86,6 +86,8 @@ export interface QueueItem {
   originalSize: number;
   status: TaskStatus;
   errorReason?: string;
+  gifTargetBypassed?: boolean;
+  gifSizeBypassed?: boolean;
   result?: CompressOutput;
   downloaded: boolean;
 }

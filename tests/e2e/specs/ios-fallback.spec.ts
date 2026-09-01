@@ -1,0 +1,29 @@
+import { test, expect } from '@playwright/test';
+
+test.describe('iOS Safari 主线程 Canvas 回退', () => {
+  test('无 OffscreenCanvas 时压缩仍可完成', async ({ page, browserName }) => {
+    test.skip(browserName !== 'webkit', '仅 webkit 模拟 iOS Safari');
+    await page.addInitScript(() => {
+      delete (window as unknown as Record<string, unknown>).OffscreenCanvas;
+    });
+    await page.goto('/');
+    const fileInput = page.locator('input[type=file]');
+    const pngBuffer = Buffer.from([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+      0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+      0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+      0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4,
+      0x89, 0x00, 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41,
+      0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
+      0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00,
+      0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
+    ]);
+    await fileInput.setInputFiles({
+      name: 'test.png',
+      mimeType: 'image/png',
+      buffer: pngBuffer,
+    });
+    await expect(page.locator('.queue-item')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('.queue-item--done, .queue-item--failed')).toBeVisible({ timeout: 30000 });
+  });
+});

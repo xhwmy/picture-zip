@@ -19,6 +19,14 @@ export default defineConfig({
   vite: {
     worker: {
       format: 'es',
+      rollupOptions: {
+        output: {
+          // Match the main build's asset naming so byte-identical WASM files
+          // emitted by both the main graph and the worker graph share one
+          // file instead of duplicating ~8MB in dist/.
+          assetFileNames: '_astro/[name].[hash][extname]',
+        },
+      },
     },
     build: {
       target: 'es2022',

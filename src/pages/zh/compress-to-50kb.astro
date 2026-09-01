@@ -13,14 +13,42 @@ const targetKB = 50;
   initialSettings={{ targetSizeKB: targetKB }}
   webAppName={`图片压缩 — 压到 ${targetKB}KB`}
   webAppUrl={`https://picture-zip.com/zh/compress-to-${targetKB}kb/`}
+  inputFormats={['JPEG', 'PNG', 'WebP', 'GIF（仅静态）', 'AVIF', 'HEIC']}
+  outputFormats={['JPEG（推荐用于照片）', 'WebP', 'PNG', 'AVIF']}
+  platforms={[
+    '桌面：Chrome、Firefox、Edge、Safari',
+    '移动端：iOS Safari 16.4+、Android Chrome 100+',
+    '无需注册或登录',
+  ]}
+  steps={[
+    `将图片拖入上传区域——目标大小已预设为 ${targetKB}KB。`,
+    '工具使用二分搜索找到能压到目标体积以内的最高质量。',
+    '如需要，会等比降低分辨率（最低 300×300）以达标。',
+    '下载结果——显示"达标 ✓"和实际文件大小。',
+  ]}
+  useCases={[
+    `压缩证件照用于要求 ≤${targetKB}KB 的考试报名`,
+    '缩小签证和护照照片以满足大使馆要求',
+    '优化头像图片用于有严格体积限制的平台',
+    '减小图片体积用于文档嵌入',
+  ]}
+  limitations={[
+    'GIF 不支持目标大小模式（自动禁用）',
+    '50KB 以下大图会有明显画质下降',
+    '最低分辨率为 300×300——更小目标可能无法实现',
+  ]}
   faqs={[
     {
       q: `如何把图片压到 ${targetKB}KB？`,
       a: `拖入图片，目标大小模式会自动调节质量（必要时降低分辨率），直到文件 ≤ ${targetKB}KB。`,
     },
     {
-      q: '有图片大小限制吗？',
-      a: '没有硬性限制。大图本地处理，但超大文件可能稍慢。',
+      q: '图片大小有限制吗？',
+      a: '没有硬性限制。大图片在本地处理，但超大文件可能需要更长时间。',
+    },
+    {
+      q: '50KB 画质如何？',
+      a: '标准 600×400 照片在 50KB 下通常可接受。更大图片会有更明显的压缩痕迹。推荐 JPEG 获取最小文件。',
     },
   ]}
 />

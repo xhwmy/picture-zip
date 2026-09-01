@@ -9,10 +9,34 @@ const targetKB = 50;
   description={`Compress any image to ${targetKB}KB or less for free. No upload, no limits — process locally in your browser.`}
   heading="Compress images to"
   highlight={`${targetKB}KB`}
-  subtitle={`Hit an exact file-size target (≤ ${targetKB}KB) for exams, visas and photo requirements — all locally, no upload.`}
+  subtitle={`Hit an exact file-size target (≤ ${targetKB}KB) for exam registration, visa photos and ID requirements — all locally, no upload.`}
   initialSettings={{ targetSizeKB: targetKB }}
   webAppName={`Image Compressor — Compress to ${targetKB}KB`}
   webAppUrl={`https://picture-zip.com/compress-to-${targetKB}kb/`}
+  inputFormats={['JPEG', 'PNG', 'WebP', 'GIF (static only)', 'AVIF', 'HEIC']}
+  outputFormats={['JPEG (recommended for photos)', 'WebP', 'PNG', 'AVIF']}
+  platforms={[
+    'Desktop: Chrome, Firefox, Edge, Safari',
+    'Mobile: iOS Safari 16.4+, Android Chrome 100+',
+    'No registration or sign-up required',
+  ]}
+  steps={[
+    `Drag your image onto the upload area — target size is pre-set to ${targetKB}KB.`,
+    'The tool uses binary search to find the highest quality that fits under your target.',
+    'If needed, resolution is reduced (down to 300×300 minimum) to meet the target.',
+    'Download the result — it will show "Target met ✓" with the actual file size.',
+  ]}
+  useCases={[
+    `Compress ID photos for exam registrations requiring ≤${targetKB}KB`,
+    'Shrink visa and passport photos to meet embassy requirements',
+    'Optimize profile pictures for platforms with strict size limits',
+    'Reduce image size for embedded use in documents',
+  ]}
+  limitations={[
+    'GIF does not support target size mode (disabled automatically)',
+    'At 50KB, expect noticeable quality reduction for large images',
+    'Minimum achievable resolution is 300×300 — smaller targets may not be possible',
+  ]}
   faqs={[
     {
       q: `How do I compress an image to ${targetKB}KB?`,
@@ -21,6 +45,10 @@ const targetKB = 50;
     {
       q: 'Is there a limit on image size?',
       a: 'No hard limit. Larger images are processed locally, though very large files may take a bit longer.',
+    },
+    {
+      q: 'What quality can I expect at 50KB?',
+      a: 'For a standard 600×400 photo, 50KB typically gives acceptable quality. Larger images will have more visible compression artifacts. JPEG is recommended for the smallest file size.',
     },
   ]}
 />

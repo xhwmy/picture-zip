@@ -13,6 +13,30 @@ const targetKB = 200;
   initialSettings={{ targetSizeKB: targetKB }}
   webAppName={`Image Compressor — Compress to ${targetKB}KB`}
   webAppUrl={`https://picture-zip.com/compress-to-${targetKB}kb/`}
+  inputFormats={['JPEG', 'PNG', 'WebP', 'GIF (static only)', 'AVIF', 'HEIC']}
+  outputFormats={['JPEG', 'WebP', 'PNG', 'AVIF']}
+  platforms={[
+    'Desktop: Chrome, Firefox, Edge, Safari',
+    'Mobile: iOS Safari 16.4+, Android Chrome 100+',
+    'No registration or sign-up required',
+  ]}
+  steps={[
+    `Drag your image(s) onto the upload area — target size is pre-set to ${targetKB}KB.`,
+    'The tool automatically adjusts quality to hit your target file size.',
+    'Resolution is only reduced if quality alone cannot meet the target.',
+    'Download individually or as a ZIP for batch processing.',
+  ]}
+  useCases={[
+    `Compress product images for e-commerce platforms requiring ≤${targetKB}KB`,
+    'Optimize images for social media posts and ads',
+    'Reduce photo size for web content management systems',
+    'Prepare images for online marketplaces (Amazon, eBay, Shopee)',
+  ]}
+  limitations={[
+    'GIF does not support target size mode (disabled automatically)',
+    'Batch processing: all images in the queue will be compressed to the same target',
+    '200KB provides good quality for most web images',
+  ]}
   faqs={[
     {
       q: `How do I compress an image to ${targetKB}KB?`,
@@ -21,6 +45,10 @@ const targetKB = 200;
     {
       q: 'Can I batch-compress many images to a target size?',
       a: 'Yes. Add as many images as you like and they will all be compressed to fit your target size, then download them together as a ZIP.',
+    },
+    {
+      q: 'What is the best format for 200KB target?',
+      a: 'JPEG is best for photos. WebP often achieves smaller sizes at the same quality. PNG works for images with transparency but may not hit 200KB for large images.',
     },
   ]}
 />

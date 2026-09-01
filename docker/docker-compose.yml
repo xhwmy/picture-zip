@@ -5,15 +5,18 @@
 
 services:
   web:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-    image: picture-zip-web:latest
+    image: ${PICTURE_ZIP_IMAGE:?must_set}
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
     networks: [internal]
 
   caddy:
-    image: caddy:2-alpine
+    image: caddy:2.8-alpine
     restart: unless-stopped
     ports:
       - "80:80"
@@ -22,31 +25,47 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
-    depends_on: [web, umami, uptime-kuma]
+    depends_on:
+      web:
+        condition: service_healthy
+      umami:
+        condition: service_started
+      uptime-kuma:
+        condition: service_started
     networks: [internal, edge]
 
+    environment:
+      # bcrypt hash for the status.picture-zip.com Basic Auth (see Caddyfile)
+      STATUS_BCRYPT_HASH: ${STATUS_BCRYPT_HASH:?must_set}
   umami-db:
-    image: postgres:16-alpine
+    image: postgres:16.4-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: umami
       POSTGRES_USER: umami
-      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:-changeme}
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:?must_set}
     volumes:
       - umami_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     networks: [internal]
 
   umami:
-    image: ghcr.io/umami-software/umami:postgresql-latest
+    image: ghcr.io/umami-software/umami:postgresql-v2.13.2
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:-changeme}@umami-db:5432/umami
-      APP_SECRET: ${UMAMI_APP_SECRET:-changeme}
-    depends_on: [umami-db]
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:?must_set}@umami-db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:?must_set}
+    depends_on:
+      umami-db:
+        condition: service_healthy
     networks: [internal]
 
   uptime-kuma:
-    image: louislam/uptime-kuma:1
+    image: louislam/uptime-kuma:1.23.13
     restart: unless-stopped
     volumes:
       - uptime_kuma:/app/data
@@ -54,16 +73,17 @@ services:
 
   # ---- Monitoring stack (opt-in: --profile monitoring) ----
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.54.1
     restart: unless-stopped
     profiles: [monitoring]
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus_data:/prometheus
     networks: [internal]
 
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.8.2
     restart: unless-stopped
     profiles: [monitoring]
     pid: host
@@ -74,23 +94,24 @@ services:
     networks: [internal]
 
   blackbox-exporter:
-    image: prom/blackbox-exporter:latest
+    image: prom/blackbox-exporter:v0.25.0
     restart: unless-stopped
     profiles: [monitoring]
     networks: [internal]
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.2.0
     restart: unless-stopped
     profiles: [monitoring]
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?must_set}
+      GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - grafana_data:/var/lib/grafana
     networks: [internal]
 
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:3.1.2
     restart: unless-stopped
     profiles: [monitoring]
     volumes:
@@ -98,20 +119,27 @@ services:
     networks: [internal]
 
   promtail:
-    image: grafana/promtail:latest
+    image: grafana/promtail:3.1.2
     restart: unless-stopped
     profiles: [monitoring]
     volumes:
       - /var/log:/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./monitoring/promtail.yml:/etc/promtail/config.yml:ro
     networks: [internal]
 
   alertmanager:
-    image: prom/alertmanager:latest
+    image: prom/alertmanager:v0.27.0
     restart: unless-stopped
     profiles: [monitoring]
     volumes:
       - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?must_set}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:?must_set}
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --config.expand-env
     networks: [internal]
 
 volumes:

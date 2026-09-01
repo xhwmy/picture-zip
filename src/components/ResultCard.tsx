@@ -76,7 +76,7 @@ export function ResultCard({ item, onDownloaded }: ResultCardProps) {
   return (
     <div class={`result-card result-card--${item.status}`}>
       <div class="result-card__thumb">
-        {thumbUrl ? <img src={thumbUrl} alt={item.file.name} loading="lazy" /> : <div class="result-card__thumb-empty" />}
+        {thumbUrl ? <img src={thumbUrl} alt={item.file.name} loading="lazy" width="60" height="60" /> : <div class="result-card__thumb-empty" />}
         {item.status === 'processing' && <div class="spinner" />}
       </div>
       <div class="result-card__body">
@@ -92,21 +92,32 @@ export function ResultCard({ item, onDownloaded }: ResultCardProps) {
               <span class={`badge${savedPercent > 0 ? ' badge--green' : ''}`}>
                 {formatPercent(savedPercent)}
               </span>
+              <span class="result-card__format">.{item.result.extension}</span>
             </div>
-            {item.result.targetReached !== undefined && (
+            {item.gifSizeBypassed ? (
+              <div class="result-card__target">{t('result.gifSizeBypassed')}</div>
+            ) : null}
+            {item.gifTargetBypassed ? (
+              <div class="result-card__target">{t('result.gifTargetBypassed')}</div>
+            ) : item.result.targetReached !== undefined ? (
               <div class="result-card__target">
                 {item.result.targetReached
                   ? t('result.targetReached', { size: formatBytes(item.result.byteLength) })
-                  : t('result.targetMin', { size: formatBytes(item.result.byteLength) })}
+                  : t('result.targetMinDetail', {
+                      size: formatBytes(item.result.byteLength),
+                      width: item.result.width,
+                      height: item.result.height,
+                      quality: item.result.qualityUsed,
+                    })}
               </div>
-            )}
+            ) : null}
           </>
         ) : (
           <div class="result-card__status">
-            <span class={`badge badge--${item.status === 'failed' ? 'red' : item.status === 'skipped' ? 'amber' : 'accent'}`}>
+            <span class={`badge badge--${item.status === 'failed' ? 'red' : item.status === 'skipped' || item.status === 'cancelled' ? 'amber' : 'accent'}`}>
               {t(statusKey(item.status))}
             </span>
-            {item.errorReason && <span class="result-card__error">{errorText(item.errorReason)}</span>}
+            {item.status === 'failed' && item.errorReason && <span class="result-card__error">{errorText(item.errorReason)}</span>}
           </div>
         )}
       </div>
@@ -115,7 +126,7 @@ export function ResultCard({ item, onDownloaded }: ResultCardProps) {
           <button class="btn btn--ghost btn--sm" type="button" onClick={download}>
             {t('result.download')}
           </button>
-        ) : item.status === 'failed' || item.status === 'skipped' ? (
+        ) : item.status === 'failed' || item.status === 'skipped' || item.status === 'cancelled' ? (
           <span class="result-card__done" />
         ) : null}
       </div>

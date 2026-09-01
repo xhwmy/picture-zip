@@ -13,6 +13,30 @@ const targetKB = 100;
   initialSettings={{ targetSizeKB: targetKB }}
   webAppName={`Image Compressor — Compress to ${targetKB}KB`}
   webAppUrl={`https://picture-zip.com/compress-to-${targetKB}kb/`}
+  inputFormats={['JPEG', 'PNG', 'WebP', 'GIF (static only)', 'AVIF', 'HEIC']}
+  outputFormats={['JPEG (recommended for photos)', 'WebP', 'PNG', 'AVIF']}
+  platforms={[
+    'Desktop: Chrome, Firefox, Edge, Safari',
+    'Mobile: iOS Safari 16.4+, Android Chrome 100+',
+    'No registration or sign-up required',
+  ]}
+  steps={[
+    `Drag your image onto the upload area — target size is pre-set to ${targetKB}KB.`,
+    'The tool uses binary search to find the highest quality that fits under your target.',
+    'If needed, resolution is reduced (down to 300×300 minimum) to meet the target.',
+    'Download the result — it will show "Target met ✓" with the actual file size.',
+  ]}
+  useCases={[
+    `Compress ID/passport photos for government portals requiring ≤${targetKB}KB`,
+    'Reduce images for online application forms with strict size limits',
+    'Optimize email attachments to stay under attachment limits',
+    'Prepare images for forum avatars or profile pictures',
+  ]}
+  limitations={[
+    'GIF does not support target size mode (disabled automatically)',
+    'If the minimum resolution (300×300) is reached but target still cannot be met, the smallest achievable result is returned',
+    'Very small target sizes (under 10KB) may result in very low quality',
+  ]}
   faqs={[
     {
       q: `How do I compress an image to exactly ${targetKB}KB?`,
@@ -25,6 +49,10 @@ const targetKB = 100;
     {
       q: 'Are my images uploaded anywhere?',
       a: 'No. All processing runs locally in your browser using WebAssembly. Your files never leave your device.',
+    },
+    {
+      q: 'What happens if the image cannot be compressed to the target?',
+      a: 'The tool returns the smallest achievable result and displays the actual size, quality, and resolution used. You can try a different output format (JPEG is usually smallest for photos).',
     },
   ]}
 />

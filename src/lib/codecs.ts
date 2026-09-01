@@ -33,12 +33,19 @@ const OUTPUT_EXTENSION: Record<Exclude<OutputFormat, 'auto'>, string> = {
   avif: 'avif',
 };
 
+
 export function detectFormat(mimeType: string, buffer: ArrayBuffer): InputFormat {
-  if (MIME_TO_FORMAT[mimeType]) return MIME_TO_FORMAT[mimeType];
+  const mimeFormat = MIME_TO_FORMAT[mimeType];
+  if (mimeFormat === 'avif' || mimeFormat === 'heic') {
+    const headerFormat = detectFormatFromHeader(buffer);
+    if (headerFormat === 'avif' || headerFormat === 'heic') return headerFormat;
+    return mimeFormat;
+  }
+  if (mimeFormat) return mimeFormat;
   return detectFormatFromHeader(buffer);
 }
 
-function detectFormatFromHeader(buffer: ArrayBuffer): InputFormat {
+export function detectFormatFromHeader(buffer: ArrayBuffer): InputFormat {
   const bytes = new Uint8Array(buffer.slice(0, 16));
   if (bytes[0] === 0xff && bytes[1] === 0xd8) return 'jpeg';
   if (
@@ -70,12 +77,22 @@ function detectFormatFromHeader(buffer: ArrayBuffer): InputFormat {
     bytes[4] === 0x66 &&
     bytes[5] === 0x74 &&
     bytes[6] === 0x79 &&
-    bytes[7] === 0x70 &&
-    ((bytes[8] === 0x61 && bytes[9] === 0x76 && bytes[10] === 0x69 && bytes[11] === 0x66) ||
-      (bytes[8] === 0x68 && bytes[9] === 0x65 && bytes[10] === 0x69 && bytes[11] === 0x63) ||
-      (bytes[8] === 0x68 && bytes[9] === 0x65 && bytes[10] === 0x69 && bytes[11] === 0x66))
-  )
-    return 'avif';
+    bytes[7] === 0x70
+  ) {
+    const brand = String.fromCharCode(bytes[8], bytes[9], bytes[10], bytes[11]);
+    if (brand === 'avif' || brand === 'avis') return 'avif';
+    if (
+      brand === 'heic' ||
+      brand === 'heix' ||
+      brand === 'hevc' ||
+      brand === 'hevx' ||
+      brand === 'heif' ||
+      brand === 'mif1' ||
+      brand === 'msf1'
+    )
+      return 'heic';
+    return 'unknown';
+  }
   return 'unknown';
 }
 
@@ -87,7 +104,17 @@ export async function decodeBuffer(
   buffer: ArrayBuffer,
   mimeType?: string,
 ): Promise<DecodedImage> {
+  const format = mimeType ? detectFormat(mimeType, buffer) : detectFormatFromHeader(buffer);
+
+  if (format === 'heic') {
+    return decodeHeic(buffer);
+  }
+
   if (!supportsOffscreenCanvas()) {
+    const { supportsMainThreadCanvas, decodeOnMainThread } = await import('./codecs-dom');
+    if (supportsMainThreadCanvas()) {
+      return decodeOnMainThread(buffer, mimeType);
+    }
     throw new CodecError('wasm-unsupported');
   }
   try {
@@ -105,11 +132,40 @@ export async function decodeBuffer(
       data: imageData.data,
       width: imageData.width,
       height: imageData.height,
-      format: mimeType ? detectFormat(mimeType, buffer) : detectFormatFromHeader(buffer),
+      format,
     };
   } catch (err) {
     if (err instanceof CodecError) throw err;
     throw new CodecError('decode-error');
+  }
+}
+
+async function decodeHeic(buffer: ArrayBuffer): Promise<DecodedImage> {
+  try {
+    const libheif = (await import('libheif-js')).default;
+    const decoder = new libheif.HeifDecoder();
+    const images = decoder.decode(new Uint8Array(buffer));
+    if (!images || images.length === 0) {
+      throw new CodecError('decode-error', 'HEIC 文件无法解码，可能已损坏');
+    }
+    const image = images[0];
+    const displayed = await new Promise<{ data: Uint8Array; width: number; height: number }>(
+      (resolve, reject) => {
+        image.display((img) => {
+          if (img && img.data) resolve(img);
+          else reject(new CodecError('decode-error', 'HEIC 解码失败'));
+        });
+      },
+    );
+    return {
+      data: new Uint8ClampedArray(displayed.data),
+      width: displayed.width,
+      height: displayed.height,
+      format: 'heic',
+    };
+  } catch (err) {
+    if (err instanceof CodecError) throw err;
+    throw new CodecError('decode-error', 'HEIC 解码器加载失败');
   }
 }
 
@@ -219,6 +275,11 @@ export async function resizeImage(
   }
 
   if (!supportsOffscreenCanvas()) {
+    const { supportsMainThreadCanvas, resizeOnMainThread } = await import('./codecs-dom');
+    if (supportsMainThreadCanvas()) {
+      const resized = await resizeOnMainThread(image, newWidth, newHeight);
+      return { image: resized, resized: true };
+    }
     throw new CodecError('wasm-unsupported');
   }
   const canvas = new OffscreenCanvas(newWidth, newHeight);

@@ -12,6 +12,30 @@ import ToolScene from '../../components/ToolScene.astro';
   initialSettings={{ format: 'webp' }}
   webAppName="PNG 转 WebP 转换器"
   webAppUrl="https://picture-zip.com/zh/png-to-webp/"
+  inputFormats={['PNG（8 位）', 'PNG（24 位）', 'PNG（32 位含透明）']}
+  outputFormats={['WebP（有损+透明）', 'WebP（无损）', 'PNG（优化）', 'AVIF']}
+  platforms={[
+    '桌面：Chrome、Firefox、Edge、Safari',
+    '移动端：iOS Safari 16.4+、Android Chrome 100+',
+    '页面加载后可离线使用',
+  ]}
+  steps={[
+    '将 PNG 文件拖入上传区域。',
+    '输出格式预设为 WebP，可用滑杆调整质量。',
+    '透明通道（alpha）自动保留。',
+    '单个下载或批量打包 ZIP 下载。',
+  ]}
+  useCases={[
+    '减小 PNG 体积提升网站性能（Lighthouse / Core Web Vitals）',
+    '批量转换带透明背景的 Logo 和图标',
+    '优化电商产品图片',
+    '缩小 PNG 截图用于邮件或消息',
+  ]}
+  limitations={[
+    'WebP 有损模式在低质量设置下可能轻微降低画质——80+ 质量接近无损',
+    '动画 PNG（APNG）暂不支持作为输入',
+    '超大 PNG（50MP+）可能需要较大内存',
+  ]}
   faqs={[
     {
       q: 'PNG 转 WebP 会保留透明吗？',
@@ -24,6 +48,10 @@ import ToolScene from '../../components/ToolScene.astro';
     {
       q: '可以批量转换吗？',
       a: '可以。拖入任意数量 PNG，全部转换后一次性打包 ZIP 下载。',
+    },
+    {
+      q: '应该用什么质量？',
+      a: '大多数图片使用 75-80 质量可获得体积与画质的最佳平衡。含文字的截图建议 85+。',
     },
   ]}
 />
