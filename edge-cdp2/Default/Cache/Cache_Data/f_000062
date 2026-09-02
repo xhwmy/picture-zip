@@ -1,0 +1,712 @@
+<!DOCTYPE html><html lang="zh-CN" data-astro-cid-sckkx6r4> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>免费图片压缩与格式转换 — picture-zip</title><meta name="description" content="批量压缩、调整尺寸并将图片转换为 JPEG、WebP、AVIF 或 PNG，全程在浏览器本地完成，文件不上传。"><link rel="canonical" href="https://picture-zip.com/zh/"><meta property="og:title" content="免费图片压缩与格式转换 — picture-zip"><meta property="og:description" content="批量压缩、调整尺寸并将图片转换为 JPEG、WebP、AVIF 或 PNG，全程在浏览器本地完成，文件不上传。"><meta property="og:type" content="website"><meta property="og:url" content="https://picture-zip.com/zh/"><meta property="og:image" content="https://picture-zip.com/og-image.png"><meta name="twitter:card" content="summary_large_image"><link rel="alternate" hreflang="en-US" href="https://picture-zip.com/"><link rel="alternate" hreflang="zh-CN" href="https://picture-zip.com/zh/"><link rel="alternate" hreflang="x-default" href="https://picture-zip.com/"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><script type="application/ld+json">[{"@context":"https://schema.org","@type":"WebApplication","name":"picture-zip — 图片压缩与格式转换","url":"https://picture-zip.com/zh/","applicationCategory":"MultimediaApplication","operatingSystem":"Web","description":"纯浏览器本地处理的批量图片压缩与格式转换工具，支持 JPEG、WebP、AVIF、PNG，文件不上传。","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"我的图片会被上传到服务器吗？","acceptedAnswer":{"@type":"Answer","text":"不会。所有处理都在你的浏览器本地通过 WebAssembly 完成，文件绝不离开你的设备。"}},{"@type":"Question","name":"有图片数量限制吗？","acceptedAnswer":{"@type":"Answer","text":"没有硬性限制，可以批量处理数百张图片，但超大批量可能占用更多内存。"}}]}]</script><style data-vite-dev-id="D:/picture-zip/src/styles/global.css">:root {
+  --ink: #1e293b;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --bg: #f6f8fb;
+  --card: #ffffff;
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --accent-soft: #eff6ff;
+  --green: #059669;
+  --green-soft: #ecfdf5;
+  --amber: #d97706;
+  --amber-soft: #fffbeb;
+  --red: #dc2626;
+  --red-soft: #fef2f2;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --radius: 12px;
+  --radius-lg: 16px;
+  --font:
+    'Segoe UI', system-ui, -apple-system, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', sans-serif;
+  --mono: Consolas, 'Courier New', monospace;
+  --maxw: 1120px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input,
+select {
+  font-family: inherit;
+}
+
+.container {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 3px 12px;
+  white-space: nowrap;
+}
+
+.badge--green {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.badge--accent {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.badge--amber {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.badge--red {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 10px 18px;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+  font-size: 14px;
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn--primary:hover {
+  background: var(--accent-strong);
+}
+
+.btn--primary:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+.btn--ghost:hover {
+  background: #f1f5f9;
+  color: var(--ink);
+}
+
+.btn--danger {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.btn--danger:hover {
+  background: #fee2e2;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-sm);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 14px;
+  }
+}
+/* ---------- Tool layout ---------- */
+.tool__layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.tool__side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.tool__main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+.tool__error {
+  background: var(--red-soft);
+  border: 1px solid #fecaca;
+  color: #7f1d1d;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 14px;
+}
+@media (max-width: 820px) {
+  .tool__layout {
+    grid-template-columns: 1fr;
+  }
+  .tool__side .uploader {
+    order: 1;
+  }
+  .tool__side .settings {
+    order: 2;
+  }
+  .tool__main {
+    order: 3;
+  }
+  .settings__preset-select {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+}
+
+/* ---------- Uploader ---------- */
+.dropzone {
+  display: block;
+  width: 100%;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-lg);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  background: var(--card);
+}
+.dropzone:hover,
+.dropzone--dragging {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.dropzone--disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.dropzone:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.dropzone__icon {
+  margin-bottom: 10px;
+}
+.dropzone__title {
+  font-weight: 700;
+  font-size: 16px;
+}
+.dropzone__subtitle {
+  color: var(--muted);
+  font-size: 14px;
+}
+.dropzone__actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.uploader__actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.uploader__stats {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.uploader__count {
+  font-weight: 600;
+  color: var(--accent);
+}
+.uploader__notice {
+  margin-top: 12px;
+  background: var(--amber-soft);
+  border: 1px solid #fde68a;
+  color: #92400e;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+.uploader__privacy {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ---------- Settings ---------- */
+.settings {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-sm);
+}
+.settings__title {
+  font-size: 17px;
+  margin-bottom: 18px;
+}
+.settings__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 0;
+  margin-bottom: 18px;
+}
+.settings__toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.settings__toggle-arrow {
+  transition: transform 0.15s ease;
+  font-size: 14px;
+  color: var(--muted);
+}
+.settings__toggle-arrow--open {
+  transform: rotate(180deg);
+}
+.settings__row {
+  margin-bottom: 18px;
+}
+.settings__row--locked {
+  opacity: 0.55;
+}
+.settings__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+.settings__value {
+  color: var(--accent);
+  font-weight: 700;
+}
+.settings__hint {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 6px 0 10px;
+}
+input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+.input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  color: var(--ink);
+  background: #fff;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.input::placeholder {
+  color: #94a3b8;
+}
+.settings__dims {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.settings__preset-select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  color: var(--ink);
+  background: #fff;
+  margin-bottom: 8px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394a3b8' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+.settings__preset-select:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.settings__x {
+  color: var(--muted);
+}
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.segmented__item {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  background: #fff;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+.segmented__item:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.segmented__item--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.preset {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  background: #fff;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+.preset:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.settings__target {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.settings__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.settings__checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+.settings__target-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.settings__target-input .input {
+  max-width: 140px;
+}
+.settings__target-input span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ---------- Result bar ---------- */
+.result-bar {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.result-bar__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.result-bar__label {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.result-bar__saved {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+/* ---------- Queue ---------- */
+.queue {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-sm);
+}
+.queue__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.queue__title {
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.queue__count {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 1px 9px;
+}
+.queue__controls {
+  display: flex;
+  gap: 8px;
+}
+.queue__empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 32px 0;
+  font-size: 14px;
+}
+.queue__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---------- Result card ---------- */
+.btn--sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+.result-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fff;
+}
+.result-card__thumb {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg);
+  flex-shrink: 0;
+}
+.result-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.result-card__thumb-empty {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #e2e8f0, #f1f5f9);
+}
+.result-card__body {
+  flex: 1;
+  min-width: 0;
+}
+.result-card__name {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.result-card__sizes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--muted);
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.result-card__sizes strong {
+  color: var(--accent);
+  font-size: 16px;
+  font-weight: 600;
+}
+.result-card__orig {
+  text-decoration: line-through;
+  text-decoration-color: #94a3b8;
+  color: #94a3b8;
+}
+.result-card__format {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.result-card__target {
+  font-size: 12.5px;
+  color: var(--green);
+  font-weight: 600;
+  margin-top: 2px;
+}
+.result-card__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+.result-card__error {
+  font-size: 12.5px;
+  color: var(--red);
+}
+.result-card__actions {
+  flex-shrink: 0;
+}
+.result-card__done {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green);
+  text-align: center;
+}
+.result-card__done::before {
+  content: '?';
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---------- Spinner ---------- */
+.spinner {
+  position: absolute;
+  inset: 0;
+  border: 3px solid rgba(37, 99, 235, 0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  margin: auto;
+  animation: spin 0.8s linear infinite;
+  background: transparent;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .spinner {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+</style>
+<style data-vite-dev-id="D:/picture-zip/src/layouts/Layout.astro?astro&#38;type=style&#38;index=0&#38;lang.css">.site-header[data-astro-cid-sckkx6r4]{position:sticky;top:0;z-index:10;background:rgba(255,255,255,0.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}.header-inner[data-astro-cid-sckkx6r4]{display:flex;align-items:center;justify-content:space-between;height:60px}.brand[data-astro-cid-sckkx6r4]{display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px;color:var(--ink)}.brand[data-astro-cid-sckkx6r4]:hover{text-decoration:none}.site-nav[data-astro-cid-sckkx6r4]{display:flex;align-items:center;gap:18px;font-size:14px}.site-nav[data-astro-cid-sckkx6r4] a[data-astro-cid-sckkx6r4]{color:var(--muted);font-weight:500}.site-nav[data-astro-cid-sckkx6r4] a[data-astro-cid-sckkx6r4]:hover{color:var(--accent);text-decoration:none}.lang-switch[data-astro-cid-sckkx6r4]{border:1px solid var(--line);border-radius:999px;padding:4px 14px;font-weight:600}.lang-switch[data-astro-cid-sckkx6r4]:hover{border-color:var(--accent)}.site-footer[data-astro-cid-sckkx6r4]{border-top:1px solid var(--line);margin-top:60px;padding:24px 0;color:var(--muted);font-size:13px}.footer-inner[data-astro-cid-sckkx6r4]{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}.menu-toggle[data-astro-cid-sckkx6r4]{display:none}.mobile-menu[data-astro-cid-sckkx6r4]{display:none}@media (max-width: 640px){.site-nav--desktop[data-astro-cid-sckkx6r4]{display:none}.menu-toggle[data-astro-cid-sckkx6r4]{display:flex;flex-direction:column;gap:4px;background:none;border:none;cursor:pointer;padding:8px}.menu-toggle[data-astro-cid-sckkx6r4]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.menu-toggle__bar[data-astro-cid-sckkx6r4]{width:22px;height:2px;background:var(--ink);border-radius:1px}.mobile-menu[data-astro-cid-sckkx6r4][hidden]{display:none}.mobile-menu[data-astro-cid-sckkx6r4]:not([hidden]){display:block;position:absolute;top:60px;left:0;right:0;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 4px 12px rgba(0,0,0,0.08);padding:16px;z-index:20}.mobile-menu__nav[data-astro-cid-sckkx6r4]{display:flex;flex-direction:column;gap:12px}.mobile-menu__nav[data-astro-cid-sckkx6r4] a[data-astro-cid-sckkx6r4]{color:var(--ink);font-weight:500;font-size:15px}.mobile-menu__nav[data-astro-cid-sckkx6r4] .lang-switch[data-astro-cid-sckkx6r4]{display:inline-block;width:fit-content}}</style>
+<style data-vite-dev-id="D:/picture-zip/src/pages/zh/index.astro?astro&#38;type=style&#38;index=0&#38;lang.css">.hero[data-astro-cid-yg6xhirs]{background:var(--bg);padding:48px 0 56px;border-bottom:1px solid var(--line)}.hero__inner[data-astro-cid-yg6xhirs]{display:flex;align-items:center;justify-content:space-between;gap:40px}.hero__text[data-astro-cid-yg6xhirs]{flex:1}.hero__title[data-astro-cid-yg6xhirs]{font-size:40px;line-height:1.2;font-weight:800;color:var(--ink)}.hero__title[data-astro-cid-yg6xhirs] span[data-astro-cid-yg6xhirs]{color:var(--accent)}.hero__subtitle[data-astro-cid-yg6xhirs]{margin:16px 0 0;max-width:560px;color:var(--muted);font-size:17px}.hero__badges[data-astro-cid-yg6xhirs]{margin-top:22px;display:flex;flex-wrap:wrap;gap:10px}.hero__demo[data-astro-cid-yg6xhirs]{position:relative;display:flex;align-items:center;gap:16px;padding:20px;background:#f8fafc;border-radius:12px;border:1px solid var(--line)}.hero__demo-item[data-astro-cid-yg6xhirs]{text-align:center}.hero__demo-item[data-astro-cid-yg6xhirs] img[data-astro-cid-yg6xhirs]{border-radius:8px;border:1px solid var(--line)}.hero__demo-label[data-astro-cid-yg6xhirs]{display:block;margin-top:8px;font-size:13px;color:var(--muted)}.hero__demo-label--accent[data-astro-cid-yg6xhirs]{color:var(--accent);font-weight:600}.hero__demo-arrow[data-astro-cid-yg6xhirs]{font-size:24px;color:var(--muted)}.hero__demo-badge[data-astro-cid-yg6xhirs]{position:absolute;top:-10px;right:-10px;background:var(--accent);color:#fff;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px}.tool-section[data-astro-cid-yg6xhirs]{margin-top:-28px;position:relative}.faq[data-astro-cid-yg6xhirs]{margin-top:48px;max-width:720px}.faq[data-astro-cid-yg6xhirs] h2[data-astro-cid-yg6xhirs]{font-size:24px;margin-bottom:16px}.faq__item[data-astro-cid-yg6xhirs]{margin-bottom:20px}.faq__item[data-astro-cid-yg6xhirs] h3[data-astro-cid-yg6xhirs]{font-size:16px;margin-bottom:6px}.faq__item[data-astro-cid-yg6xhirs] p[data-astro-cid-yg6xhirs]{color:var(--muted);font-size:14px}@media (max-width: 768px){.hero__inner[data-astro-cid-yg6xhirs]{flex-direction:column}.hero__demo[data-astro-cid-yg6xhirs]{width:100%;max-width:100%;box-sizing:border-box;justify-content:center}.hero__demo-item[data-astro-cid-yg6xhirs] img[data-astro-cid-yg6xhirs]{width:auto;max-width:min(42vw,160px);height:auto}.hero__title[data-astro-cid-yg6xhirs]{font-size:28px}.hero[data-astro-cid-yg6xhirs]{padding:32px 0 40px}}@media (max-width: 640px){.hero__demo[data-astro-cid-yg6xhirs]{flex-direction:column;align-items:center;gap:8px;padding:14px;width:100%;box-sizing:border-box;max-width:100%;overflow:hidden}.hero__demo-item[data-astro-cid-yg6xhirs]{width:100%;text-align:center}.hero__demo-item[data-astro-cid-yg6xhirs] img[data-astro-cid-yg6xhirs]{width:100%;max-width:min(70vw,200px);height:auto}.hero__demo-arrow[data-astro-cid-yg6xhirs]{width:auto;text-align:center;font-size:20px;transform:rotate(90deg)}.hero__demo-badge[data-astro-cid-yg6xhirs]{top:4px;right:4px;font-size:11px;padding:3px 8px}}</style><script type="module" src="/@vite/client"></script>
+<script type="module" src="/@fs/D:/picture-zip/node_modules/.pnpm/astro@5.18.2_@types+node@24.13.3_rollup@4.63.1_typescript@5.9.3_yaml@2.9.0/node_modules/astro/dist/runtime/client/dev-toolbar/entrypoint.js?v=8fc15174"></script>
+<script>window.__astro_dev_toolbar__ = {"root":"D:\\picture-zip\\","version":"5.18.2","debugInfo":"Astro                    v5.18.2\nNode                     v22.19.0\nSystem                   Windows (x64)\nPackage Manager          unknown\nOutput                   static\nAdapter                  none\nIntegrations             @astrojs/preact\n                         @astrojs/sitemap"}</script>
+<script type="module" src="/src/styles/global.css"></script>
+<script type="module" src="/src/layouts/Layout.astro?astro&type=style&index=0&lang.css"></script>
+<script type="module" src="/src/pages/zh/index.astro?astro&type=style&index=0&lang.css"></script></head> <body data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="101:9"> <header class="site-header" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="102:33"> <div class="container header-inner" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="103:43"> <a class="brand" href="/zh/" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="104:53"> <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="105:78"> <rect width="64" height="64" rx="14" fill="#2563eb" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="106:14"></rect> <path d="M32 14l12 12-4 4-6-6v18h-4V24l-6 6-4-4z" fill="#fff" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="107:14"></path> <path d="M18 44h28v4H18z" fill="#fff" opacity="0.9" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="108:14"></path> </svg> <span data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="110:17">picture-zip</span> </a> <nav class="site-nav site-nav--desktop" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="112:49"> <a href="/zh/" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="113:50">首页</a><a href="/zh/api/" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="113:50">API</a><a href="/zh/about/" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="113:50">关于</a><a href="/zh/privacy/" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="113:50">隐私</a> <a class="lang-switch" href="/" data-lang="en" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="114:98">English</a> </nav> <button class="menu-toggle" id="menu-toggle" type="button" aria-label="菜单" aria-expanded="false" aria-controls="mobile-menu" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="116:152"> <span class="menu-toggle__bar" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="117:12"></span> <span class="menu-toggle__bar" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="118:12"></span> <span class="menu-toggle__bar" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="119:12"></span> </button> </div> <div class="mobile-menu" id="mobile-menu" hidden data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="122:56"> <nav class="mobile-menu__nav" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="123:39"> <a href="/zh/" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="124:50">首页</a><a href="/zh/api/" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="124:50">API</a><a href="/zh/about/" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="124:50">关于</a><a href="/zh/privacy/" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="124:50">隐私</a> <a class="lang-switch" href="/" data-lang="en" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="125:98">English</a> </nav> </div> </header> <main data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="129:11">  <section class="hero" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="46:25"> <div class="container hero__inner" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="47:40"> <div class="hero__text" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="48:31"> <h1 class="hero__title" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="49:33">无需上传即可<br data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="49:40"><span data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="49:51">压缩与转换图片</span></h1> <p class="hero__subtitle" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="50:35">
+批量压缩、调整尺寸并将图片转换为 JPEG、WebP、AVIF 或 PNG——全程在你的浏览器本地完成。
+</p> <div class="hero__badges" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="53:35"> <span class="badge badge--accent" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="54:45">100% 本地</span> <span class="badge badge--green" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="55:44">不上传</span> <span class="badge badge--amber" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="56:44">无限制</span> </div> </div> <div class="hero__demo" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="59:31"> <div class="hero__demo-item" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="60:38"> <img src="/demo-before.jpg" alt="压缩前" loading="eager" width="200" height="150" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="61:12"> <span class="hero__demo-label" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="62:42">778 KB</span> </div> <div class="hero__demo-arrow" aria-hidden="true" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="64:58">→</div> <div class="hero__demo-item" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="65:38"> <img src="/demo-after.jpg" alt="压缩后" loading="eager" width="200" height="150" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="66:12"> <span class="hero__demo-label hero__demo-label--accent" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="67:67">11 KB</span> </div> <div class="hero__demo-badge" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="69:39">缩小 99%</div> </div> </div> </section> <section class="container tool-section" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="74:43"> <style>astro-island,astro-slot,astro-static-slot{display:contents}</style><script>(()=>{var e=async t=>{await(await t())()};(self.Astro||(self.Astro={})).only=e;window.dispatchEvent(new Event("astro:only"));})();</script><script>(()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var l=(i,o,a)=>g(i,typeof o!="symbol"?o+"":o,a);{let i={0:t=>y(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[h,e]=t;return h in i?i[h](e):void 0},a=t=>t.map(o),y=t=>typeof t!="object"||t===null?t:Object.fromEntries(Object.entries(t).map(([h,e])=>[h,o(e)]));class f extends HTMLElement{constructor(){super(...arguments);l(this,"Component");l(this,"hydrator");l(this,"hydrate",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest("astro-island[ssr]");if(e){e.addEventListener("astro:hydrate",this.hydrate,{once:!0});return}let c=this.querySelectorAll("astro-slot"),n={},p=this.querySelectorAll("template[data-astro-template]");for(let r of p){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("data-astro-template")||"default"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("name")||"default"]=r.innerHTML)}let u;try{u=this.hasAttribute("props")?y(JSON.parse(this.getAttribute("props"))):{}}catch(r){let s=this.getAttribute("component-url")||"<unknown>",v=this.getAttribute("component-export");throw v&&(s+=` (export ${v})`),console.error(`[hydrate] Error parsing props for component ${s}`,this.getAttribute("props"),r),r}let d,m=this.hydrator(this);d=performance.now(),await m(this.Component,u,n,{client:this.getAttribute("client")}),d&&this.setAttribute("client-render-time",(performance.now()-d).toString()),this.removeAttribute("ssr"),this.dispatchEvent(new CustomEvent("astro:hydrate"))});l(this,"unmount",()=>{this.isConnected||this.dispatchEvent(new CustomEvent("astro:unmount"))})}disconnectedCallback(){document.removeEventListener("astro:after-swap",this.unmount),document.addEventListener("astro:after-swap",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute("await-children")||document.readyState==="interactive"||document.readyState==="complete")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener("DOMContentLoaded",e),c.disconnect(),this.childrenConnectedCallback()},c=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&&this.lastChild.nodeValue==="astro:end"&&(this.lastChild.remove(),e())});c.observe(this,{childList:!0}),document.addEventListener("DOMContentLoaded",e)}}async childrenConnectedCallback(){let e=this.getAttribute("before-hydration-url");e&&await import(e),this.start()}async start(){let e=JSON.parse(this.getAttribute("opts")),c=this.getAttribute("client");if(Astro[c]===void 0){window.addEventListener(`astro:${c}`,()=>this.start(),{once:!0});return}try{await Astro[c](async()=>{let n=this.getAttribute("renderer-url"),[p,{default:u}]=await Promise.all([import(this.getAttribute("component-url")),n?import(n):()=>()=>{}]),d=this.getAttribute("component-export")||"default";if(!d.includes("."))this.Component=p[d];else{this.Component=p;for(let m of d.split("."))this.Component=this.Component[m]}return this.hydrator=u,this.hydrate},e,this)}catch(n){console.error(`[astro-island] Error hydrating ${this.getAttribute("component-url")}`,n)}}attributeChangedCallback(){this.hydrate()}}l(f,"observedAttributes",["props"]),customElements.get("astro-island")||customElements.define("astro-island",f)}})();</script><astro-island uid="1q9cqv" component-url="/src/components/ImageTool.tsx" component-export="ImageTool" renderer-url="/node_modules/.vite/deps/@astrojs_preact_client-dev__js.js?v=8fc15174" props="{&quot;data-astro-cid-yg6xhirs&quot;:[0,true]}" ssr client="only" before-hydration-url="/@id/astro:scripts/before-hydration.js" opts="{&quot;name&quot;:&quot;ImageTool&quot;,&quot;value&quot;:&quot;preact&quot;}"></astro-island> </section> <section class="container faq" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="78:34"> <h2 data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="79:9">常见问题</h2> <div class="faq__item" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="80:28"> <h3 data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="81:11">我的图片会被上传到服务器吗？</h3> <p data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="82:10">不会。所有处理都在你的浏览器本地通过 WebAssembly 完成，文件绝不离开你的设备。</p> </div> <div class="faq__item" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="84:28"> <h3 data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="85:11">压缩会损坏画质吗？</h3> <p data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="86:10">有损格式（JPEG、WebP、AVIF）以少量画质换取更小体积，你可以通过质量滑杆控制，或使用目标大小模式。PNG 输出为无损。</p> </div> <div class="faq__item" data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="88:28"> <h3 data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="89:11">支持哪些格式？</h3> <p data-astro-cid-yg6xhirs data-astro-source-file="D:/picture-zip/src/pages/zh/index.astro" data-astro-source-loc="90:10">输入：JPEG、PNG、WebP、GIF、AVIF。输出：JPEG、PNG、WebP、AVIF。</p> </div> </section>  </main> <footer class="site-footer" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="132:33"> <div class="container footer-inner" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="133:43"> <span data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="134:15">© 2026 picture-zip · 图片压缩与格式转换</span> <span class="footer-privacy" data-astro-cid-sckkx6r4 data-astro-source-file="D:/picture-zip/src/layouts/Layout.astro" data-astro-source-loc="135:38">本地处理 · 文件不离开设备</span> </div> </footer> <script type="module" src="/src/layouts/Layout.astro?astro&type=script&index=1&lang.ts"></script> </body> </html>  

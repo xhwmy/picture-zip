@@ -1,0 +1,26 @@
+2026-09-01 08:59:21.460: [INFO] CurrentProfilePath: D:\picture-zip\edge-cdp4\Default
+2026-09-01 08:59:21.460: [INFO] Profiles total count: 1
+2026-09-01 08:59:21.460: [INFO] Profile: name=用户配置 1 path=D:\picture-zip\edge-cdp4\Default lastActive=null
+2026-09-01 08:59:21.460: [INFO] LastUsedProfileDir: D:\picture-zip\edge-cdp4\Default
+2026-09-01 08:59:21.460: [INFO] VisibilityChanged: 0
+2026-09-01 08:59:21.483: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-01 08:59:21.483: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-01 08:59:21.484: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-01 08:59:21.484: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-01 08:59:21.484: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-01 08:59:21.485: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-01 08:59:21.485: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-01 08:59:21.486: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-01 08:59:21.486: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-01 08:59:21.486: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-01 08:59:21.504: [INFO] OnDoneLoading sync enabled: 0
+2026-09-01 08:59:21.504: [INFO] BookmarkModelLoaded, ids_reassigned: 0
+2026-09-01 08:59:21.504: [INFO] BookmarksLoadDropped droppedNodes=0
+2026-09-01 08:59:21.504: [INFO] BookmarksSnapshot Startup total=0 bar=0 other=0 mobile=0 showBar=0 showBarNTP=1
+2026-09-01 08:59:21.549: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-01 08:59:21.739: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-01 08:59:21.741: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-01 08:59:21.743: [INFO] Primary account changed.
+2026-09-01 08:59:21.743: [INFO] OnPrimaryAccountChanged PrimaryAccountChangeEvent::Type::kSet
+2026-09-01 08:59:21.749: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-01 08:59:21.750: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0

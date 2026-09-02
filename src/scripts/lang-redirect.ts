@@ -1,4 +1,7 @@
 export function langRedirect(): void {
+  if (typeof location !== 'undefined' && location.pathname.startsWith('/zh')) {
+    return;
+  }
   try {
     const pref = localStorage.getItem('pz-lang-pref');
     if (pref === 'zh') {
