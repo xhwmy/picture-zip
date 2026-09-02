@@ -1,0 +1,30 @@
+{
+    email admin@anxun.xyz
+}
+
+(security_headers) {
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}
+
+analytics.anxun.xyz {
+    import security_headers
+    reverse_proxy umami:3000
+}
+
+status.anxun.xyz {
+    import security_headers
+    basic_auth {
+        admin {$STATUS_BCRYPT_HASH}
+    }
+    reverse_proxy uptime-kuma:3001
+}
+
+grafana.anxun.xyz {
+    import security_headers
+    reverse_proxy grafana:3000
+}

@@ -1,0 +1,109 @@
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - umami
+      - uptime-kuma
+      - grafana
+    networks: [edge, internal]
+
+  umami-db:
+    image: postgres:16.4-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:?must_set}
+    volumes:
+      - umami_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks: [internal]
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-v2.13.2
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:?must_set}@umami-db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:?must_set}
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    networks: [internal]
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:1.23.13
+    restart: unless-stopped
+    volumes:
+      - uptime_kuma:/app/data
+    networks: [internal]
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    networks: [internal]
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    restart: unless-stopped
+    pid: host
+    volumes:
+      - /:/host:ro
+    command:
+      - --path.rootfs=/host
+    networks: [internal]
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.25.0
+    restart: unless-stopped
+    networks: [internal]
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?must_set}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks: [internal]
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --config.expand-env
+    networks: [internal]
+
+volumes:
+  caddy_data:
+  caddy_config:
+  umami_db:
+  uptime_kuma:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  internal:
+  edge:
