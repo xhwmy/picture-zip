@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://picture-zip.com/sitemap-index.xml
+Sitemap: https://xhwmy.github.io/picture-zip/sitemap-index.xml

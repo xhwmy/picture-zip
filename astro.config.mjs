@@ -5,7 +5,8 @@ import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://picture-zip.com',
+  site: 'https://xhwmy.github.io',
+  base: '/picture-zip',
   output: 'static',
   integrations: [
     preact({ compat: true }),

@@ -5,23 +5,21 @@ on:
     branches: [master]
   workflow_dispatch:
 
-# Production deploys must be strictly serial: concurrent runs would race on
-# staging cleanup and overwrite the shared rollback backup.
-concurrency:
-  group: picture-zip-production
-  cancel-in-progress: false
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}-web
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -36,228 +34,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Audit production dependencies
-        run: pnpm audit --prod --audit-level=high
-
       - name: Build
         run: pnpm build
+        env:
+          PUBLIC_UMAMI_SCRIPT_URL: ${{ vars.PUBLIC_UMAMI_SCRIPT_URL }}
+          PUBLIC_UMAMI_WEBSITE_ID: ${{ vars.PUBLIC_UMAMI_WEBSITE_ID }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          path: dist
 
-      - name: Extract image metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=sha,format=short
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-
-      - name: Build and push image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./docker/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # These files are mounted from the VPS, rather than embedded in the web image.
-      # Do not include docker/.env: production secrets stay on the server.
-      - name: Sync infrastructure configuration
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "docker/Caddyfile,docker/docker-compose.yml,docker/monitoring"
-          # Unique per-run directory: stale files from earlier runs can never
-          # leak into production (scp overwrite does not delete removed files).
-          target: "/srv/picture-zip/staging-${{ github.run_id }}"
-          # scp-action defaults to overwrite=false: without this, synced config
-          # files are silently ignored from the second deployment onwards.
-          overwrite: true
-
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1.0.6
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          envs: REGISTRY,IMAGE_NAME
-          script: |
-            set -euo pipefail
-            BASE=/srv/picture-zip
-            STAGING="${BASE}/staging-${{ github.run_id }}"
-            NEW_IMAGE="${REGISTRY}/${IMAGE_NAME}:${{ steps.meta.outputs.version }}"
-            export PICTURE_ZIP_IMAGE="${NEW_IMAGE}"
-
-            # Remove the staging dir on any exit path; also purge leftovers
-            # from previous runs (excluding the current one).
-            trap 'rm -rf "${STAGING}"' EXIT
-            find "${BASE}" -maxdepth 1 -name 'staging-*' ! -path "${STAGING}" -exec rm -rf {} + 2>/dev/null || true
-
-            # Best-effort restore: every step is guarded so a missing or
-            # unreadable backup file can never abort the rollback midway.
-            restore_prev_config() {
-              if [ -f "${BASE}/backup/docker/Caddyfile" ]; then
-                cp -a "${BASE}/backup/docker/Caddyfile" "${BASE}/docker/Caddyfile" || echo "WARN: Caddyfile restore failed"
-              fi
-              if [ -f "${BASE}/backup/docker/docker-compose.yml" ]; then
-                cp -a "${BASE}/backup/docker/docker-compose.yml" "${BASE}/docker/docker-compose.yml" || echo "WARN: docker-compose.yml restore failed"
-              fi
-              rm -rf "${BASE}/docker/monitoring"
-              if [ -d "${BASE}/backup/docker/monitoring" ]; then
-                cp -a "${BASE}/backup/docker/monitoring" "${BASE}/docker/monitoring" || true
-              fi
-              return 0
-            }
-
-            # Local health probe: bypasses public DNS and hairpin NAT entirely,
-            # verifying this VPS's own Caddy, TLS and site.
-            verify_site() {
-              curl -fsS --resolve picture-zip.com:443:127.0.0.1 https://picture-zip.com/ >/dev/null
-            }
-
-            # Post-rollback proof: confirm the previous version is actually
-            # serving. A failed rollback is reported loudly with diagnostics.
-            # Verifying HTTP 200 alone is insufficient: a still-running new
-            # web container behind the restored Caddy would also answer 200,
-            # so we additionally require the running web image to be exactly
-            # OLD_IMAGE before declaring success.
-            verify_rollback() {
-              for i in $(seq 1 10); do
-                if verify_site 2>/dev/null; then
-                  running="$(docker inspect --format '{{.Config.Image}}' "$(docker compose ps -q web)" 2>/dev/null || true)"
-                  if [ -n "${running}" ] && [ "${running}" = "${OLD_IMAGE}" ]; then
-                    echo "Rollback verified: web serving ${OLD_IMAGE}"
-                    return 0
-                  fi
-                fi
-                sleep 2
-              done
-              echo "ROLLBACK FAILED: site unhealthy or web image != previous"
-              docker compose ps || true
-              docker compose logs --tail=50 web caddy || true
-              return 1
-            }
-
-            # Full rollback: restore previous config, then recreate every
-            # service that may have been rebuilt with the new configuration
-            # (umami/kuma included), so files and running containers agree.
-            rollback_stack() {
-              restore_prev_config
-              if [ -n "${OLD_IMAGE}" ]; then
-                export PICTURE_ZIP_IMAGE="${OLD_IMAGE}"
-                docker compose up -d --no-build --no-deps web umami-db umami uptime-kuma || true
-                docker compose up -d --no-build --no-deps --force-recreate caddy || true
-                verify_rollback
-              else
-                # No previous image to fall back to: fail closed. Stop the
-                # whole stack instead of leaving new-config containers running
-                # against a restored or absent configuration.
-                docker compose stop || true
-              fi
-            }
-
-            # Swap the staged configuration into production. Called under
-            # `if !`, so a failed step returns instead of tripping `set -e`;
-            # the caller then restores the snapshot — a half-swapped state
-            # never survives on disk.
-            swap_config() {
-              # Fresh per-deploy snapshot: wipe any stale backup first, so a
-              # failed copy can never silently fall back to an older deploy's
-              # files. Every copy failure aborts BEFORE any production file
-              # is moved. Return codes: 1 = snapshot failed (production
-              # untouched, caller must NOT restore), 2 = swap failed
-              # mid-move (caller must restore the snapshot).
-              rm -rf "${BASE}/backup/docker" || return 1
-              mkdir -p "${BASE}/backup/docker" || return 1
-              if [ -f "${BASE}/docker/Caddyfile" ]; then
-                cp -a "${BASE}/docker/Caddyfile" "${BASE}/backup/docker/" || return 1
-              fi
-              if [ -f "${BASE}/docker/docker-compose.yml" ]; then
-                cp -a "${BASE}/docker/docker-compose.yml" "${BASE}/backup/docker/" || return 1
-              fi
-              if [ -d "${BASE}/docker/monitoring" ]; then
-                cp -a "${BASE}/docker/monitoring" "${BASE}/backup/docker/monitoring" || return 1
-              fi
-              mv -f "${STAGING}/docker/Caddyfile" "${BASE}/docker/Caddyfile" || return 2
-              mv -f "${STAGING}/docker/docker-compose.yml" "${BASE}/docker/docker-compose.yml" || return 2
-              rm -rf "${BASE}/docker/monitoring" || return 2
-              if [ -d "${STAGING}/docker/monitoring" ]; then
-                mv "${STAGING}/docker/monitoring" "${BASE}/docker/monitoring" || return 2
-              fi
-              return 0
-            }
-
-            # 1) Validate staged config without touching production files.
-            #    Isolated project name prevents clashing with the live stack.
-            cd "${STAGING}/docker"
-            docker compose -p pz-staging --env-file "${BASE}/docker/.env" -f docker-compose.yml config -q
-            docker compose -p pz-staging --env-file "${BASE}/docker/.env" -f docker-compose.yml run --rm --no-deps caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
-
-            # 2) Snapshot the current config, then swap staged in (guarded)
-            rc=0
-            swap_config || rc=$?
-            if [ "$rc" -eq 2 ]; then
-              echo "Config swap failed mid-move; restoring previous configuration"
-              restore_prev_config
-              exit 1
-            elif [ "$rc" -ne 0 ]; then
-              echo "Config snapshot failed before any production change; aborting"
-              exit 1
-            fi
-
-            cd "${BASE}/docker"
-            OLD_IMAGE="$(docker inspect --format '{{.Config.Image}}' "$(docker compose ps -q web)" 2>/dev/null || true)"
-
-            # 3) Pull and start app services (explicit list; --no-deps skips health gates)
-            if ! docker pull "${NEW_IMAGE}"; then
-              echo "Image pull failed; restoring previous configuration"
-              restore_prev_config
-              exit 1
-            fi
-            if ! docker compose up -d --no-build --no-deps web umami-db umami uptime-kuma; then
-              echo "Service start failed; rolling back"
-              rollback_stack
-              exit 1
-            fi
-
-            # 4) Recreate the proxy so the synced Caddyfile is loaded.
-            #    Guarded so a Caddy failure cannot bypass rollback.
-            if ! docker compose up -d --no-build --no-deps --force-recreate caddy; then
-              echo "Caddy failed to start; rolling back"
-              rollback_stack
-              exit 1
-            fi
-
-            # 5) Health check; persist the image tag only on success
-            for i in $(seq 1 10); do
-              if verify_site; then
-                touch .env
-                if grep -q '^PICTURE_ZIP_IMAGE=' .env; then
-                  sed -i "s|^PICTURE_ZIP_IMAGE=.*|PICTURE_ZIP_IMAGE=${NEW_IMAGE}|" .env
-                else
-                  printf '\nPICTURE_ZIP_IMAGE=%s\n' "${NEW_IMAGE}" >> .env
-                fi
-                echo "Health check passed: ${NEW_IMAGE}"
-                exit 0
-              fi
-              sleep 3
-            done
-
-            # 6) Health check failed: restore previous image AND previous configuration
-            echo "Health check failed; rolling back"
-            rollback_stack
-            exit 1
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
