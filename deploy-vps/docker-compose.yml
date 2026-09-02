@@ -89,8 +89,11 @@ services:
     volumes:
       - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
     environment:
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
-      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      SMTP_TO: ${SMTP_TO:?must_set}
+      SMTP_FROM: ${SMTP_FROM:?must_set}
+      SMTP_HOST: ${SMTP_HOST:?must_set}
+      SMTP_USER: ${SMTP_USER:?must_set}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:?must_set}
     command:
       - --config.file=/etc/alertmanager/alertmanager.yml
       - --config.expand-env
