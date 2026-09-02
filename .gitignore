@@ -33,3 +33,10 @@ lighthouse-reports/
 playwright-report/
 blob-report/
 .lhci/
+
+# local diagnostics / browser profiles
+edge-*/
+/*.cjs
+/*.log
+/*.html
+screenshot.png
