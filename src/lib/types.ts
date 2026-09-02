@@ -2,11 +2,14 @@ export type OutputFormat = 'auto' | 'jpeg' | 'png' | 'webp' | 'avif';
 
 export type InputFormat = 'jpeg' | 'png' | 'webp' | 'gif' | 'avif' | 'heic' | 'unknown';
 
+export type ResizeMode = 'fit' | 'cover';
+
 export interface CompressSettings {
   format: OutputFormat;
   quality: number;
   maxWidth?: number;
   maxHeight?: number;
+  resizeMode?: ResizeMode;
   targetSizeKB?: number;
 }
 
@@ -15,6 +18,7 @@ export interface CompressionOptions {
   quality: number;
   maxWidth?: number;
   maxHeight?: number;
+  resizeMode?: ResizeMode;
 }
 
 export interface TargetSizeOptions {
@@ -72,6 +76,7 @@ export interface WorkerRequest {
   targetKB?: number;
   maxWidth?: number;
   maxHeight?: number;
+  resizeMode?: ResizeMode;
 }
 
 export type WorkerResponse =

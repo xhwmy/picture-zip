@@ -64,6 +64,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
         quality: msg.quality,
         maxWidth: msg.maxWidth,
         maxHeight: msg.maxHeight,
+        resizeMode: msg.resizeMode,
       });
       result = toCompressOutput(
         r.buffer,

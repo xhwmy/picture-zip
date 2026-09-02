@@ -1,4 +1,4 @@
-import type { DecodedImage, EncodedImage, InputFormat, OutputFormat } from './types';
+import type { DecodedImage, EncodedImage, InputFormat, OutputFormat, ResizeMode } from './types';
 
 export class CodecError extends Error {
   code: 'format-not-supported' | 'decode-error' | 'encode-error' | 'wasm-unsupported';
@@ -247,42 +247,61 @@ export async function resizeImage(
   image: DecodedImage,
   maxWidth?: number,
   maxHeight?: number,
-  minDimension = 300,
+  mode: ResizeMode = 'fit',
 ): Promise<ResizeResult> {
   if (!maxWidth && !maxHeight) {
     return { image, resized: false };
   }
-  const limitWidth = maxWidth ? Math.min(maxWidth, image.width) : image.width;
-  const limitHeight = maxHeight ? Math.min(maxHeight, image.height) : image.height;
-  const ratio = Math.min(limitWidth / image.width, limitHeight / image.height);
 
-  let newWidth = image.width;
-  let newHeight = image.height;
+  const useCover = mode === 'cover' && maxWidth !== undefined && maxHeight !== undefined;
 
-  if (ratio < 1) {
-    newWidth = Math.max(1, Math.round(image.width * ratio));
-    newHeight = Math.max(1, Math.round(image.height * ratio));
+  let targetWidth: number;
+  let targetHeight: number;
+  let sourceRect: { sx: number; sy: number; sw: number; sh: number } | undefined;
+
+  if (useCover) {
+    const ratio = Math.max(maxWidth! / image.width, maxHeight! / image.height);
+    const scaledWidth = image.width * ratio;
+    const scaledHeight = image.height * ratio;
+    const offsetX = (scaledWidth - maxWidth!) / 2;
+    const offsetY = (scaledHeight - maxHeight!) / 2;
+    targetWidth = maxWidth!;
+    targetHeight = maxHeight!;
+    sourceRect = {
+      sx: offsetX / ratio,
+      sy: offsetY / ratio,
+      sw: maxWidth! / ratio,
+      sh: maxHeight! / ratio,
+    };
+  } else {
+    const ratio = Math.min(
+      maxWidth ? maxWidth / image.width : Infinity,
+      maxHeight ? maxHeight / image.height : Infinity,
+    );
+    targetWidth = Math.max(1, Math.round(image.width * ratio));
+    targetHeight = Math.max(1, Math.round(image.height * ratio));
+    sourceRect = undefined;
   }
 
-  if (minDimension && (newWidth < minDimension || newHeight < minDimension)) {
-    if (newWidth >= minDimension && newHeight >= minDimension) {
-      return { image, resized: false };
-    }
-  }
-
-  if (newWidth === image.width && newHeight === image.height) {
+  const noCrop =
+    !sourceRect ||
+    (sourceRect.sx === 0 &&
+      sourceRect.sy === 0 &&
+      sourceRect.sw === image.width &&
+      sourceRect.sh === image.height);
+  if (targetWidth === image.width && targetHeight === image.height && noCrop) {
     return { image, resized: false };
   }
 
   if (!supportsOffscreenCanvas()) {
     const { supportsMainThreadCanvas, resizeOnMainThread } = await import('./codecs-dom');
     if (supportsMainThreadCanvas()) {
-      const resized = await resizeOnMainThread(image, newWidth, newHeight);
+      const resized = await resizeOnMainThread(image, targetWidth, targetHeight, sourceRect);
       return { image: resized, resized: true };
     }
     throw new CodecError('wasm-unsupported');
   }
-  const canvas = new OffscreenCanvas(newWidth, newHeight);
+  const canvas = new OffscreenCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new CodecError('decode-error');
   const sourceData = new ImageData(
@@ -293,9 +312,23 @@ export async function resizeImage(
   const sourceBitmap = await createImageBitmap(sourceData);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(sourceBitmap, 0, 0, newWidth, newHeight);
+  if (sourceRect) {
+    ctx.drawImage(
+      sourceBitmap,
+      sourceRect.sx,
+      sourceRect.sy,
+      sourceRect.sw,
+      sourceRect.sh,
+      0,
+      0,
+      targetWidth,
+      targetHeight,
+    );
+  } else {
+    ctx.drawImage(sourceBitmap, 0, 0, targetWidth, targetHeight);
+  }
   sourceBitmap.close();
-  const resized = ctx.getImageData(0, 0, newWidth, newHeight);
+  const resized = ctx.getImageData(0, 0, targetWidth, targetHeight);
   return {
     image: {
       data: resized.data,

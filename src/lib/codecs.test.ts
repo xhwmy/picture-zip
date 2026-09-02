@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { detectFormat, decodeBuffer, CodecError } from './codecs';
+import { detectFormat, decodeBuffer, resizeImage, CodecError } from './codecs';
 import { supportsMainThreadCanvas } from './codecs-dom';
 
 function makeFtypBuffer(brand: string): ArrayBuffer {
@@ -123,5 +123,82 @@ describe('主线程 Canvas 回退', () => {
     await expect(decodeBuffer(pngBuffer, 'image/png')).rejects.toMatchObject({
       code: 'wasm-unsupported',
     });
+  });
+});
+
+describe('resizeImage fit/cover 模式', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function setupCanvasMock() {
+    const drawImageCalls: unknown[] = [];
+    const fakeCtx = {
+      drawImage: vi.fn((...args: unknown[]) => {
+        drawImageCalls.push(args);
+      }),
+      getImageData: vi.fn((_x: number, _y: number, w: number, h: number) => ({
+        data: new Uint8ClampedArray(w * h * 4),
+        width: w,
+        height: h,
+      })),
+      imageSmoothingEnabled: false,
+      imageSmoothingQuality: 'low',
+    };
+    const fakeCanvas = {
+      width: 0,
+      height: 0,
+      getContext: vi.fn().mockReturnValue(fakeCtx),
+    };
+    vi.stubGlobal('OffscreenCanvas', vi.fn(() => fakeCanvas));
+    vi.stubGlobal('createImageBitmap', vi.fn().mockResolvedValue({ close: vi.fn() }));
+    return { drawImageCalls };
+  }
+
+  it('cover 模式输出精确目标尺寸并用 9 参数 drawImage', async () => {
+    const { drawImageCalls } = setupCanvasMock();
+    const image = {
+      data: new Uint8ClampedArray(800 * 600 * 4),
+      width: 800,
+      height: 600,
+      format: 'jpeg' as const,
+    };
+    const result = await resizeImage(image, 512, 512, 'cover');
+    expect(result.resized).toBe(true);
+    expect(result.image.width).toBe(512);
+    expect(result.image.height).toBe(512);
+    expect(drawImageCalls.length).toBe(1);
+    expect(drawImageCalls[0]).toHaveLength(9);
+  });
+
+  it('fit 模式保持比例输出 512×384 并用 5 参数 drawImage', async () => {
+    const { drawImageCalls } = setupCanvasMock();
+    const image = {
+      data: new Uint8ClampedArray(800 * 600 * 4),
+      width: 800,
+      height: 600,
+      format: 'jpeg' as const,
+    };
+    const result = await resizeImage(image, 512, 512, 'fit');
+    expect(result.resized).toBe(true);
+    expect(result.image.width).toBe(512);
+    expect(result.image.height).toBe(384);
+    expect(drawImageCalls.length).toBe(1);
+    expect(drawImageCalls[0]).toHaveLength(5);
+  });
+
+  it('cover 模式在只设一个维度时降级为 fit', async () => {
+    const { drawImageCalls } = setupCanvasMock();
+    const image = {
+      data: new Uint8ClampedArray(800 * 600 * 4),
+      width: 800,
+      height: 600,
+      format: 'jpeg' as const,
+    };
+    const result = await resizeImage(image, 512, undefined, 'cover');
+    expect(result.resized).toBe(true);
+    expect(result.image.width).toBe(512);
+    expect(result.image.height).toBe(384);
+    expect(drawImageCalls[0]).toHaveLength(5);
   });
 });

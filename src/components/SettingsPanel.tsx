@@ -55,7 +55,7 @@ export function SettingsPanel({ settings, onChange, targetModeDisabled, hasGif }
     const selectedId = (e.currentTarget as HTMLSelectElement).value;
     const preset = RESIZE_PRESETS.find((p) => p.id === selectedId);
     if (preset && preset.id !== 'custom') {
-      update({ maxWidth: preset.maxWidth, maxHeight: preset.maxHeight });
+      update({ maxWidth: preset.maxWidth, maxHeight: preset.maxHeight, resizeMode: preset.defaultMode ?? 'fit' });
     }
     setSelectedPresetId(selectedId);
   }
@@ -159,6 +159,30 @@ export function SettingsPanel({ settings, onChange, targetModeDisabled, hasGif }
           />
         </div>
       </div>
+
+      {settings.maxWidth && settings.maxHeight && (
+        <div class="settings__row">
+          <label class="settings__label">{t('settings.resizeMode')}</label>
+          <div class="segmented">
+            <button
+              type="button"
+              class={`segmented__item${(settings.resizeMode ?? 'fit') === 'fit' ? ' segmented__item--active' : ''}`}
+              aria-pressed={(settings.resizeMode ?? 'fit') === 'fit'}
+              onClick={() => update({ resizeMode: 'fit' })}
+            >
+              {t('settings.resizeModeFit')}
+            </button>
+            <button
+              type="button"
+              class={`segmented__item${settings.resizeMode === 'cover' ? ' segmented__item--active' : ''}`}
+              aria-pressed={settings.resizeMode === 'cover'}
+              onClick={() => update({ resizeMode: 'cover' })}
+            >
+              {t('settings.resizeModeCover')}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div class="settings__row">
         <label class="settings__label">{t('settings.preset')}</label>
