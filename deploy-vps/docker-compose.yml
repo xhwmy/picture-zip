@@ -9,6 +9,8 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+    environment:
+      STATUS_BCRYPT_HASH: ${STATUS_BCRYPT_HASH:?must_set}
     depends_on:
       - umami
       - uptime-kuma
