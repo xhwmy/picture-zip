@@ -42,10 +42,18 @@ export async function decodeOnMainThread(
   }
 }
 
+export interface SourceRect {
+  sx: number;
+  sy: number;
+  sw: number;
+  sh: number;
+}
+
 export async function resizeOnMainThread(
   image: DecodedImage,
   newWidth: number,
   newHeight: number,
+  sourceRect?: SourceRect,
 ): Promise<DecodedImage> {
   if (!supportsMainThreadCanvas()) {
     throw new CodecError('wasm-unsupported');
@@ -63,7 +71,15 @@ export async function resizeOnMainThread(
   const sourceBitmap = await createImageBitmap(sourceData);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(sourceBitmap, 0, 0, newWidth, newHeight);
+  if (sourceRect) {
+    ctx.drawImage(
+      sourceBitmap,
+      sourceRect.sx, sourceRect.sy, sourceRect.sw, sourceRect.sh,
+      0, 0, newWidth, newHeight,
+    );
+  } else {
+    ctx.drawImage(sourceBitmap, 0, 0, newWidth, newHeight);
+  }
   sourceBitmap.close();
   const resized = ctx.getImageData(0, 0, newWidth, newHeight);
   return {

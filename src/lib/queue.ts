@@ -144,6 +144,7 @@ class MainThreadCompressWorker implements PseudoWorker {
       quality: msg.quality,
       maxWidth: msg.maxWidth,
       maxHeight: msg.maxHeight,
+      resizeMode: msg.resizeMode,
     });
     return {
       buffer: r.buffer,
@@ -170,6 +171,7 @@ export function createQueue(
     quality: options.quality ?? 75,
     maxWidth: options.maxWidth,
     maxHeight: options.maxHeight,
+    resizeMode: options.resizeMode,
     targetSizeKB: options.targetSizeKB,
   };
 
@@ -324,6 +326,7 @@ export function createQueue(
           targetKB: useTarget ? settings.targetSizeKB : undefined,
           maxWidth: settings.maxWidth,
           maxHeight: settings.maxHeight,
+          resizeMode: settings.resizeMode,
         };
         setWorkerTimeout(idle, id);
         idle.worker.postMessage(request, { transfer: [buffer] });

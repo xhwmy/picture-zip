@@ -7,7 +7,7 @@ export async function compressBuffer(
   options: CompressionOptions,
 ): Promise<CompressOutput> {
   const decoded = await decodeBuffer(buffer, mimeType);
-  const resized = await resizeImage(decoded, options.maxWidth, options.maxHeight);
+  const resized = await resizeImage(decoded, options.maxWidth, options.maxHeight, options.resizeMode);
   const encoded = await encodeImage(resized.image, options.format, options.quality);
   return {
     buffer: encoded.buffer,

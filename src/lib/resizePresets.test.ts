@@ -86,4 +86,19 @@ describe('resizePresets', () => {
     expect(enKeys.has('settings.resizePresetLabel')).toBe(true);
     expect(zhKeys.has('settings.resizePresetLabel')).toBe(true);
   });
+
+  it('avatar、social_square、ecommerce_main 默认 cover 模式', () => {
+    const find = (id: string) => RESIZE_PRESETS.find((p) => p.id === id)!;
+    expect(find('avatar').defaultMode).toBe('cover');
+    expect(find('social_square').defaultMode).toBe('cover');
+    expect(find('ecommerce_main').defaultMode).toBe('cover');
+  });
+
+  it('非方形预设不设 defaultMode（默认 fit）', () => {
+    const find = (id: string) => RESIZE_PRESETS.find((p) => p.id === id)!;
+    expect(find('web_banner').defaultMode).toBeUndefined();
+    expect(find('social_portrait').defaultMode).toBeUndefined();
+    expect(find('id_photo_1inch').defaultMode).toBeUndefined();
+    expect(find('thumbnail').defaultMode).toBeUndefined();
+  });
 });
