@@ -18,9 +18,7 @@ analytics.anxun.xyz {
 
 status.anxun.xyz {
     import security_headers
-    basic_auth {
-        admin {$STATUS_BCRYPT_HASH}
-    }
+
     reverse_proxy uptime-kuma:3001
 }
 
