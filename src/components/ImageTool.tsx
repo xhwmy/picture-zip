@@ -3,26 +3,15 @@ import { createQueue, type QueueController } from '../lib/queue';
 import { t } from '../lib/i18n';
 import { formatBytes, formatPercent } from '../lib/format';
 import type { CompressSettings, QueueItem } from '../lib/types';
+import { supportsMainThreadCanvas } from '../lib/codecs-dom';
 import { Uploader } from './Uploader';
 import { SettingsPanel } from './SettingsPanel';
 import { QueueList } from './QueueList';
 import { ZipButton } from './ZipButton';
 
-function getBrowserSupportIssue(): string | null {
-  const hasCanvas = typeof document !== 'undefined' && typeof HTMLCanvasElement !== 'undefined';
-  const hasImageBitmap = typeof createImageBitmap !== 'undefined';
-  const hasOffscreen = typeof OffscreenCanvas !== 'undefined';
-
-  if (!hasCanvas) {
-    return t('error.noCanvas');
-  }
-  if (!hasImageBitmap && !hasOffscreen) {
-    return t('error.noCreateImageBitmap');
-  }
-  if (!hasOffscreen && !hasImageBitmap) {
-    return t('error.unsupportedBrowser');
-  }
-  return null;
+function isBrowserUnsupported(): boolean {
+  const hasOffscreen = typeof OffscreenCanvas !== 'undefined' && typeof createImageBitmap !== 'undefined';
+  return !hasOffscreen && !supportsMainThreadCanvas();
 }
 
 interface ImageToolProps {
@@ -133,8 +122,8 @@ export function ImageTool({ initialSettings, targetModeDisabled }: ImageToolProp
 
   return (
     <div class="tool">
-      {getBrowserSupportIssue() && (
-        <div class="tool__error">{getBrowserSupportIssue()}</div>
+      {isBrowserUnsupported() && (
+        <div class="tool__error">{t('error.unsupportedBrowser')}</div>
       )}
       <div class="tool__layout">
         <aside class="tool__side">

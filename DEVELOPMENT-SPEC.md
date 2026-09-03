@@ -263,83 +263,33 @@ picture-zip/
 
 ## 5. 部署规范
 
-### 5.1 生产架构建议（优先）
-
-> 图片完全在浏览器处理，服务器不承载图片上传、编码和存储。静态站使用 VPS 只会增加 Docker、证书、补丁和故障维护成本。
-
-**推荐方案：Cloudflare Pages**
-
-| 组件 | 方案 |
-|---|---|
-| 网站 | Astro dist 部署到 Cloudflare Pages |
-| 域名/DNS/CDN | Cloudflare（免费版） |
-| HTTPS | Cloudflare 自动处理，SSL 模式必须设为 Full (strict) |
-| 统计 | Umami 单独部署在小 VPS 或使用第三方（Plausible Cloud） |
-| 监控 | UptimeRobot / BetterStack 外部拨测 |
-
-**备选方案：单机 Docker（学习/运维实践）**
-
-| 组件 | 规格 |
-|---|---|
-| Web + Umami + PostgreSQL + Uptime Kuma | 2 vCPU / 4GB RAM / 50GB NVMe |
-| 加上完整监控栈（Prometheus + Grafana + Loki + Promtail + Alertmanager） | 4 vCPU / 8GB RAM |
-
-⚠️ 2C2G 不适合运行完整监控栈，容易内存告警甚至 OOM。
-
-**节点选择：**
-- 全球英文用户：Hetzner 欧洲/美国、DigitalOcean、Linode
-- 亚洲用户：Vultr 东京/新加坡、Linode 东京/新加坡
-- 中文用户占比高：阿里云香港/日本、腾讯云国际
-- 不建议 Oracle Always Free 作为唯一生产依赖
-
-### 5.2 服务器要求（Docker 方案）
+### 5.1 服务器要求
 
 | 项 | 要求 |
 |---|---|
-| VPS | 2C4G 起步（推荐 4C8G 如运行监控栈），香港/日本/美国节点 |
+| VPS | 2C2G 起步，香港/日本/美国节点（面向 Google 流量，无需备案） |
 | 系统 | Ubuntu 22.04/24.04 LTS |
 | 依赖 | Docker + Docker Compose 插件 |
 | 域名 | picture-zip.com（DNS 托管 Cloudflare） |
-| SSH | 仅密钥认证，禁用密码登录，配置主机指纹校验 |
 
-### 5.3 docker-compose 拓扑
+### 5.2 docker-compose 预期拓扑
 
 ```
 caddy (80/443) ──> web (Astro 静态产物, nginx:alpine 托管 dist/)
-              ├──> umami (+ PostgreSQL)
-              └──> uptime-kuma (状态页)
-
-# 监控栈（可选，--profile monitoring）
-              ├──> prometheus / node_exporter / blackbox_exporter
-              ├──> grafana / loki / promtail / alertmanager
+              ├──> umami (+ Postgres)
+              ├──> prometheus / grafana / loki / alertmanager / node_exporter
+              └──> uptime-kuma
 ```
 
-- 静态产物多阶段 Docker 构建：`node:20 build → nginx:alpine 托管 dist/`
-- CI 构建 Docker image 推送到 GHCR，服务器拉取指定版本（不再在 VPS 上重新构建）
+- 静态产物多阶段构建：`node:20 build → nginx:alpine 托管 dist/`
 - Caddy 自动 HTTPS（Let's Encrypt）；HTTP 强制跳转 HTTPS；启用 HSTS
-- Cloudflare 代理开启；SSL 模式设为 Full (strict)；源站防火墙仅放行 CF IP 段 + SSH 白名单
-- 管理服务（Grafana、Prometheus、Alertmanager）不直接暴露公网，通过 SSH 隧道或 Tailscale 访问
-- 所有密码和密钥使用 `${VAR:?must_set}` 强制设置，不提供默认值
-- 镜像固定版本或 digest，不使用 `latest` 标签
-- 所有服务配置 healthcheck
+- Cloudflare 代理开启；源站防火墙仅放行 CF IP 段 + SSH 白名单（可选）
 
-### 5.4 CI/CD
+### 5.3 CI/CD
 
-- GitHub Actions：push → main → CI 构建 + Docker 镜像构建 → 推送 GHCR → SSH 到 VPS 拉取指定版本 → 容器重启 → 健康检查
-- 部署失败自动回滚（保留上一版本镜像 tag）
-- **部署前必须通过 CI**（`pnpm audit` 高危即失败，不再 `|| true`）
+- GitHub Actions：push → main → `pnpm build` → 同步 dist 到 VPS → 容器重启 → 健康检查（curl 首页 200）
+- 部署失败回滚：保留上一版 `dist.bak`
 - 密钥全部走 GitHub Secrets，不进仓库
-- SSH 部署使用主机指纹校验（`StrictHostKeyChecking`）
-- 部署后执行本地源站健康检查 + 外部拨测
-
-### 5.5 安全要求
-
-- `.dockerignore` 排除 `.git`、测试文件、截图、`.env` 等非必要文件
-- Cloudflare SSL 模式：Full (strict)（不接受 Flexible）
-- SSH 主机指纹校验，禁止首次连接自动接受未知主机密钥
-- PostgreSQL / Umami 数据库定期 offsite 备份（restic → B2 或另一台 VPS）
-- 管理面板（Grafana、Umami 后台）不直接暴露公网，通过 Cloudflare Access、Tailscale 或 SSH 隧道访问
-- CSP 头：`default-src 'self'`，WASM 允许 `wasm-unsafe-eval`，Umami 脚本允许自托管域名
 
 ---
 
@@ -388,25 +338,15 @@ caddy (80/443) ──> web (Astro 静态产物, nginx:alpine 托管 dist/)
 ### 7.2 兼容性
 
 - 浏览器：Chrome/Edge/Firefox/Safari 最近 2 个大版本
-- 移动端：iOS Safari 16.4+（需要 `createImageBitmap` 和 Canvas 支持）、Android Chrome 100+
-- 不支持 `createImageBitmap` 或 Canvas 的浏览器：显示特性检测提示，引导升级
-- Worker 中 OffscreenCanvas 不可用时自动回退到主线程 Canvas 处理
+- 移动端：iOS Safari 15+、Android Chrome 100+
 - 不支持 WASM 的过旧浏览器：显示引导升级页（<0.1% 流量，可接受）
 
 ### 7.3 安全与隐私
 
 - 全站 HTTPS + HSTS；无第三方追踪脚本（umami 自托管）
-- CSP 基线：`default-src 'self'`，WASM 允许 `wasm-unsafe-eval`；Umami 脚本允许自托管域名
-- 所有内联脚本已移至外部 JS 模块，不依赖 `'unsafe-inline'`（仅 `style-src` 保留 `'unsafe-inline'` 用于 Astro 作用域样式）
+- CSP 基线：`default-src 'self'`，WASM 允许 `wasm-unsafe-eval`
 - 无 Cookie（umami 免 Cookie 模式），无需欧盟 Cookie 横幅
-- 依赖锁版本（pnpm-lock.yaml），CI 中 `pnpm audit` 高危漏洞即失败（不使用 `|| true`）
-- Docker 镜像固定版本或 digest，不使用 `latest`
-- 所有密码/密钥使用 `${VAR:?must_set}` 强制设置
-- 管理面板不暴露公网（通过 SSH 隧道/Tailscale 访问）
-- `.dockerignore` 排除 `.git`、测试文件、截图、`.env`
-- PostgreSQL / Umami 数据库 offsite 备份
-- SSH 主机指纹校验，禁止自动接受未知主机密钥
-- Cloudflare SSL 模式：Full (strict)
+- 依赖锁版本（pnpm-lock.yaml），CI 中 `pnpm audit` 高危漏洞即失败
 
 ### 7.4 性能预算
 
@@ -480,25 +420,17 @@ caddy (80/443) ──> web (Astro 静态产物, nginx:alpine 托管 dist/)
 **Step 5（M4 部署）**
 ```
 编写 docker/{Dockerfile,Caddyfile,docker-compose.yml} 与 .github/workflows/deploy.yml：
-- 多阶段构建；Caddy 反代 + 自动 HTTPS + HSTS；compose 含 web/umami(+postgresql)
-- CI 构建 Docker 镜像 → 推送 GHCR → SSH 到 VPS 拉取指定版本 → 健康检查
-- .dockerignore 排除 .git/测试/截图/.env
-- 密码使用 ${VAR:?must_set}，镜像固定版本不使用 latest
-- pnpm audit 高危即失败（不用 || true）
-- SSH 主机指纹校验
-- Cloudflare SSL: Full (strict)
+- 多阶段构建；Caddy 反代 + 自动 HTTPS + HSTS；compose 含 web/umami(+postgres)
+- GH Actions：push main → build → 部署到 VPS（SSH）→ 健康检查 curl 首页 200
 （前置：VPS 装 Ubuntu 22.04+Docker；域名解析到 Cloudflare 并开代理）
-验收：push 一次代码自动上线，https 可访问，管理面板不暴露公网
+验收：push 一次代码自动上线，https 可访问
 ```
 
 **Step 6（M5 监控）**
 ```
-在同一 VPS 用 docker compose --profile monitoring 部署 prometheus + node_exporter + blackbox_exporter + grafana + loki + promtail + alertmanager + uptime-kuma；
+在同一 VPS 用 docker compose 部署 prometheus + node_exporter + blackbox_exporter + grafana + loki + promtail + alertmanager + uptime-kuma；
 prometheus.yml 抓取本机指标 + blackbox http_2xx 拨测 https://域名；
-告警规则按 6.3 表配置，Telegram 通知（Alertmanager --config.expand-env 展开 $TELEGRAM_BOT_TOKEN）；
-Grafana 导入 Node Exporter Full + 黑盒拨测看板；
-Grafana/Prometheus/Alertmanager 不暴露公网，通过 SSH 隧道访问；
-所有监控服务配置 healthcheck；Promtail 挂载 /var/run/docker.sock。
+告警规则按 6.3 表配置，Telegram 通知；Grafana 导入 Node Exporter Full + 黑盒拨测看板
 验收：手动 stop web 容器 → 2 分钟内收到 Telegram 告警
 ```
 

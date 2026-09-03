@@ -13,30 +13,6 @@ import ToolScene from '../../components/ToolScene.astro';
   targetModeDisabled
   webAppName="GIF 压缩器"
   webAppUrl="https://picture-zip.com/zh/gif-compressor/"
-  inputFormats={['GIF（动画）', 'GIF（静态）']}
-  outputFormats={['WebP（推荐）', 'GIF（保留动画）', 'PNG', 'JPEG']}
-  platforms={[
-    '桌面：Chrome、Firefox、Edge、Safari',
-    '移动端：iOS Safari 16.4+、Android Chrome 100+',
-    '无需安装任何应用',
-  ]}
-  steps={[
-    '将 GIF 文件拖入上传区域，或点击选择文件。',
-    '工具自动检测动画 GIF 并切换到 GIF 模式。',
-    '如需要可调整质量设置（GIF 不支持目标大小模式）。',
-    '单击下载单个文件，或点击全部下载 (ZIP) 批量获取。',
-  ]}
-  useCases={[
-    '减小 GIF 文件体积用于 Discord、Slack 等表情包',
-    '压缩表情 GIF 以满足社交媒体体积限制',
-    '优化网站 GIF 加载性能',
-    '缩小 GIF 贴图用于即时通讯应用',
-  ]}
-  limitations={[
-    'GIF 不支持目标大小模式（体积取决于帧数和调色板）',
-    '动画 GIF 在 GIF 输出时保留动画；静态 GIF 遵循所选格式',
-    '超大 GIF（100帧以上）可能处理较慢',
-  ]}
   faqs={[
     {
       q: '如何让 GIF 变小？',
@@ -49,10 +25,6 @@ import ToolScene from '../../components/ToolScene.astro';
     {
       q: 'GIF 支持目标大小模式吗？',
       a: '不支持。GIF 体积取决于帧数与调色板，无法用单一质量参数控制，因此目标大小模式对 GIF 置灰。',
-    },
-    {
-      q: '为什么推荐转 WebP？',
-      a: 'WebP 支持动画且压缩率更高。将动画 GIF 转为 WebP 可减少 30-60% 的体积，同时保持画质。',
     },
   ]}
 />

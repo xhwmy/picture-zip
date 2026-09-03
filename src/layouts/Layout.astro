@@ -10,7 +10,6 @@ interface Props {
   ogType?: string;
   noindex?: boolean;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
-  langRedirect?: boolean;
 }
 
 const {
@@ -22,7 +21,6 @@ const {
   ogType = 'website',
   noindex = false,
   jsonLd,
-  langRedirect = false,
 } = Astro.props;
 
 const site = Astro.site ?? new URL('https://picture-zip.com');
@@ -87,11 +85,6 @@ function oppositeUrl(pathname: string): string {
       <script async defer src={umamiScriptUrl} data-website-id={umamiId} is:inline></script>
     )}
     <slot name="head" />
-    {langRedirect && (
-      <script>
-        import '../scripts/lang-redirect';
-      </script>
-    )}
     {
       jsonLd && (
         <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />

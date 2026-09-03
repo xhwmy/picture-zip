@@ -12,30 +12,6 @@ import ToolScene from '../components/ToolScene.astro';
   targetModeDisabled
   webAppName="GIF Compressor"
   webAppUrl="https://picture-zip.com/gif-compressor/"
-  inputFormats={['GIF (animated)', 'GIF (static)']}
-  outputFormats={['WebP (recommended)', 'GIF (animated preserved)', 'PNG', 'JPEG']}
-  platforms={[
-    'Desktop: Chrome, Firefox, Edge, Safari',
-    'Mobile: iOS Safari 16.4+, Android Chrome 100+',
-    'No app installation required',
-  ]}
-  steps={[
-    'Drag and drop your GIF file(s) onto the upload area, or click to browse.',
-    'The tool detects animated GIFs automatically and switches to GIF mode.',
-    'Adjust quality settings if needed (target size mode is disabled for GIFs).',
-    'Click Download for individual files, or Download all (ZIP) for batch.',
-  ]}
-  useCases={[
-    'Reduce GIF file size for Discord, Slack, and forum avatars',
-    'Compress meme GIFs to meet social media size limits',
-    'Optimize GIF animations for website loading performance',
-    'Shrink GIF stickers for messaging apps',
-  ]}
-  limitations={[
-    'Target size mode is not available for GIF (size depends on frame count and color palette)',
-    'Animated GIFs preserve their animation in GIF output; static GIFs follow your chosen format',
-    'Very large GIFs (100+ frames) may take longer to process',
-  ]}
   faqs={[
     {
       q: 'How do I make a GIF smaller?',
@@ -48,10 +24,6 @@ import ToolScene from '../components/ToolScene.astro';
     {
       q: 'Does target size mode work with GIF?',
       a: 'No. GIF file size depends on frame count and color palette, not a single quality parameter. Target size mode is disabled for GIFs.',
-    },
-    {
-      q: 'Why is WebP recommended over GIF?',
-      a: 'WebP supports animation with better compression. Converting an animated GIF to WebP can reduce file size by 30-60% while maintaining visual quality.',
     },
   ]}
 />

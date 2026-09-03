@@ -11,30 +11,6 @@ import ToolScene from '../components/ToolScene.astro';
   initialSettings={{ format: 'jpeg' }}
   webAppName="HEIC to JPG Converter"
   webAppUrl="https://picture-zip.com/heic-to-jpg/"
-  inputFormats={['HEIC (iPhone/iPad)', 'HEIF', 'HEIX', 'HEVC']}
-  outputFormats={['JPG (recommended)', 'WebP', 'PNG']}
-  platforms={[
-    'Desktop: Chrome, Firefox, Edge, Safari',
-    'Mobile: iOS Safari 16.4+, Android Chrome 100+',
-    'No native HEIC support required — decoding is done via WASM',
-  ]}
-  steps={[
-    'Drag your HEIC photo(s) onto the upload area, or click to browse.',
-    'The tool automatically detects HEIC format and uses the WASM decoder.',
-    'Output format is pre-set to JPG. Change it if you prefer WebP or PNG.',
-    'Click Download or Download all (ZIP) for batch conversions.',
-  ]}
-  useCases={[
-    'Convert iPhone HEIC photos for Windows PCs that cannot open HEIC',
-    'Batch-convert HEIC photos for uploading to forms and government portals',
-    'Prepare HEIC photos for email attachments (JPG is more universally supported)',
-    'Convert HEIC for websites and apps that do not support HEIC',
-  ]}
-  limitations={[
-    'HEIC is input-only — you cannot output to HEIC format',
-    'Large HEIC files (10MB+) may take 5-10 seconds to decode',
-    'HEIC burst photos and Live Photos are converted as single images',
-  ]}
   faqs={[
     {
       q: 'What is HEIC?',
@@ -47,10 +23,6 @@ import ToolScene from '../components/ToolScene.astro';
     {
       q: 'Which browsers support HEIC conversion?',
       a: 'All modern browsers with WebAssembly support — Chrome, Firefox, Edge, and Safari. The decoding is done in-browser via libheif WASM, so no native HEIC support is required.',
-    },
-    {
-      q: 'Does this preserve EXIF metadata?',
-      a: 'EXIF metadata is not preserved in the conversion. The tool focuses on pixel data and compression quality.',
     },
   ]}
 />
