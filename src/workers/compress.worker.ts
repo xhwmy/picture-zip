@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import { compressBuffer, compressGifAnimated } from '../lib/compress';
 import { compressToTargetSize } from '../lib/targetSize';
+import { compressVisuallyLossless } from '../lib/visuallyLossless';
 import type { CompressOutput, WorkerRequest, WorkerResponse } from '../lib/types';
 
 function isGif(mimeType: string, buffer: ArrayBuffer): boolean {
@@ -57,6 +58,25 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
         r.resized,
         r.originalByteLength,
         r.targetReached,
+      );
+    } else if (msg.type === 'visuallyLossless') {
+      const r = await compressVisuallyLossless(msg.buffer, msg.mimeType, {
+        format: msg.format,
+        quality: msg.quality,
+        maxWidth: msg.maxWidth,
+        maxHeight: msg.maxHeight,
+        resizeMode: msg.resizeMode,
+        perceptualLevel: msg.perceptualLevel,
+      });
+      result = toCompressOutput(
+        r.buffer,
+        r.mimeType,
+        r.extension,
+        r.width,
+        r.height,
+        r.qualityUsed,
+        r.resized,
+        r.originalByteLength,
       );
     } else {
       const r = await compressBuffer(msg.buffer, msg.mimeType, {

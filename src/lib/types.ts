@@ -4,6 +4,8 @@ export type InputFormat = 'jpeg' | 'png' | 'webp' | 'gif' | 'avif' | 'heic' | 'u
 
 export type ResizeMode = 'fit' | 'cover';
 
+export type PerceptualLevel = 'normal' | 'high' | 'maximum';
+
 export interface CompressSettings {
   format: OutputFormat;
   quality: number;
@@ -11,6 +13,8 @@ export interface CompressSettings {
   maxHeight?: number;
   resizeMode?: ResizeMode;
   targetSizeKB?: number;
+  visuallyLossless?: boolean;
+  perceptualLevel?: PerceptualLevel;
 }
 
 export interface CompressionOptions {
@@ -67,7 +71,7 @@ export interface TargetSizeResult {
 }
 
 export interface WorkerRequest {
-  type: 'compress' | 'targetSize';
+  type: 'compress' | 'targetSize' | 'visuallyLossless';
   id: string;
   buffer: ArrayBuffer;
   mimeType: string;
@@ -77,6 +81,7 @@ export interface WorkerRequest {
   maxWidth?: number;
   maxHeight?: number;
   resizeMode?: ResizeMode;
+  perceptualLevel?: PerceptualLevel;
 }
 
 export type WorkerResponse =

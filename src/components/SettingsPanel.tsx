@@ -26,7 +26,8 @@ const PRESETS: { label: string; settings: Partial<CompressSettings> }[] = [
 
 export function SettingsPanel({ settings, onChange, targetModeDisabled, hasGif }: SettingsPanelProps) {
   const targetMode = settings.targetSizeKB !== undefined;
-  const qualityLocked = targetMode;
+  const perceptualMode = settings.visuallyLossless === true;
+  const qualityLocked = targetMode || perceptualMode;
   const [collapsed, setCollapsed] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('custom');
 
@@ -47,7 +48,18 @@ export function SettingsPanel({ settings, onChange, targetModeDisabled, hasGif }
       const { targetSizeKB, ...rest } = settings;
       onChange(rest);
     } else {
-      update({ targetSizeKB: 100 });
+      const { visuallyLossless, ...rest } = settings;
+      onChange({ ...rest, targetSizeKB: 100 });
+    }
+  }
+
+  function togglePerceptualMode() {
+    if (perceptualMode) {
+      const { visuallyLossless, ...rest } = settings;
+      onChange(rest);
+    } else {
+      const { targetSizeKB, ...rest } = settings;
+      onChange({ ...rest, visuallyLossless: true, perceptualLevel: rest.perceptualLevel ?? 'normal' });
     }
   }
 
@@ -95,22 +107,24 @@ export function SettingsPanel({ settings, onChange, targetModeDisabled, hasGif }
         <p class="settings__hint">{t('settings.gifOutputHint')}</p>
       )}
 
-      <div class={`settings__row${qualityLocked ? ' settings__row--locked' : ''}`}>
-        <label class="settings__label" htmlFor="quality">
-          {t('settings.quality')}
-          <span class="settings__value">{settings.quality}</span>
-        </label>
-        <input
-          id="quality"
-          type="range"
-          min="1"
-          max="100"
-          step="1"
-          value={settings.quality}
-          disabled={qualityLocked}
-          onInput={(e) => update({ quality: Number((e.currentTarget as HTMLInputElement).value) })}
-        />
-      </div>
+      {!perceptualMode && (
+        <div class={`settings__row${qualityLocked ? ' settings__row--locked' : ''}`}>
+          <label class="settings__label" htmlFor="quality">
+            {t('settings.quality')}
+            <span class="settings__value">{settings.quality}</span>
+          </label>
+          <input
+            id="quality"
+            type="range"
+            min="1"
+            max="100"
+            step="1"
+            value={settings.quality}
+            disabled={qualityLocked}
+            onInput={(e) => update({ quality: Number((e.currentTarget as HTMLInputElement).value) })}
+          />
+        </div>
+      )}
 
       <div class="settings__row">
         <label class="settings__label">{t('settings.resizeHint')}</label>
@@ -206,7 +220,7 @@ export function SettingsPanel({ settings, onChange, targetModeDisabled, hasGif }
             <input
               type="checkbox"
               checked={targetMode}
-              disabled={targetModeDisabled}
+              disabled={targetModeDisabled || perceptualMode}
               onChange={toggleTargetMode}
             />
             <span>{t('settings.targetMode')}</span>
@@ -232,6 +246,44 @@ export function SettingsPanel({ settings, onChange, targetModeDisabled, hasGif }
                 }}
               />
               <span>KB</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div class={`settings__row settings__target${perceptualMode ? ' settings__target--on' : ''}`}>
+        <div class="settings__target-head">
+          <label class="settings__checkbox">
+            <input
+              type="checkbox"
+              checked={perceptualMode}
+              disabled={hasGif || targetMode}
+              onChange={togglePerceptualMode}
+            />
+            <span>{t('settings.perceptualMode')}</span>
+          </label>
+        </div>
+        {hasGif && (
+          <p class="settings__hint">{t('settings.perceptualGifDisabled')}</p>
+        )}
+        {perceptualMode && (
+          <div class="settings__target-body">
+            <p class="settings__hint">{t('settings.perceptualDesc')}</p>
+            <div class="settings__row">
+              <label class="settings__label">{t('settings.perceptualLevel')}</label>
+              <div class="segmented">
+                {(['normal', 'high', 'maximum'] as const).map((level) => (
+                  <button
+                    key={level}
+                    type="button"
+                    class={`segmented__item${(settings.perceptualLevel ?? 'normal') === level ? ' segmented__item--active' : ''}`}
+                    aria-pressed={(settings.perceptualLevel ?? 'normal') === level}
+                    onClick={() => update({ perceptualLevel: level })}
+                  >
+                    {t(`settings.perceptual_${level}`)}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}

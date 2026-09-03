@@ -62,6 +62,13 @@
   "settings.targetPlaceholder": "e.g. 100",
   "settings.targetInvalid": "Please enter a valid target size (KB).",
   "settings.targetGifDisabled": "GIF does not support target size mode.",
+  "settings.perceptualMode": "Visually lossless mode",
+  "settings.perceptualDesc": "Automatically finds the lowest quality where the result is indistinguishable from the original (SSIM-based).",
+  "settings.perceptualLevel": "Strictness",
+  "settings.perceptual_normal": "Standard",
+  "settings.perceptual_high": "High",
+  "settings.perceptual_maximum": "Maximum",
+  "settings.perceptualGifDisabled": "GIF does not support visually lossless mode.",
   "settings.gifOutputHint": "Animated GIF stays .gif; static GIF follows your chosen format.",
 
   "queue.title": "Queue",

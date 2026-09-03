@@ -112,6 +112,7 @@ class MainThreadCompressWorker implements PseudoWorker {
   private async processRequest(msg: WorkerRequest): Promise<CompressOutput> {
     const { compressBuffer, compressGifAnimated } = await import('./compress');
     const { compressToTargetSize } = await import('./targetSize');
+    const { compressVisuallyLossless } = await import('./visuallyLossless');
 
     const isGif = msg.mimeType === 'image/gif' || isGifBytes(msg.buffer);
 
@@ -135,6 +136,28 @@ class MainThreadCompressWorker implements PseudoWorker {
         qualityUsed: r.qualityUsed,
         resized: r.resized,
         targetReached: r.targetReached,
+        originalByteLength: r.originalByteLength,
+      };
+    }
+
+    if (msg.type === 'visuallyLossless') {
+      const r = await compressVisuallyLossless(msg.buffer, msg.mimeType, {
+        format: msg.format,
+        quality: msg.quality,
+        maxWidth: msg.maxWidth,
+        maxHeight: msg.maxHeight,
+        resizeMode: msg.resizeMode,
+        perceptualLevel: msg.perceptualLevel,
+      });
+      return {
+        buffer: r.buffer,
+        mimeType: r.mimeType,
+        extension: r.extension,
+        byteLength: r.buffer.byteLength,
+        width: r.width,
+        height: r.height,
+        qualityUsed: r.qualityUsed,
+        resized: r.resized,
         originalByteLength: r.originalByteLength,
       };
     }
@@ -173,6 +196,8 @@ export function createQueue(
     maxHeight: options.maxHeight,
     resizeMode: options.resizeMode,
     targetSizeKB: options.targetSizeKB,
+    visuallyLossless: options.visuallyLossless,
+    perceptualLevel: options.perceptualLevel,
   };
 
   const items: QueueItem[] = [];
@@ -313,11 +338,13 @@ export function createQueue(
         }
         const gif = isGifBytes(buffer);
         const wantsTarget = settings.targetSizeKB !== undefined;
+        const wantsPerceptual = settings.visuallyLossless === true && !wantsTarget;
         const useTarget = wantsTarget && !gif;
+        const usePerceptual = wantsPerceptual && !gif;
         item.gifTargetBypassed = wantsTarget && gif;
         item.gifSizeBypassed = gif && (settings.maxWidth !== undefined || settings.maxHeight !== undefined);
         const request: WorkerRequest = {
-          type: useTarget ? 'targetSize' : 'compress',
+          type: useTarget ? 'targetSize' : usePerceptual ? 'visuallyLossless' : 'compress',
           id,
           buffer,
           mimeType: item.file.type,
@@ -327,6 +354,7 @@ export function createQueue(
           maxWidth: settings.maxWidth,
           maxHeight: settings.maxHeight,
           resizeMode: settings.resizeMode,
+          perceptualLevel: usePerceptual ? (settings.perceptualLevel ?? 'normal') : undefined,
         };
         setWorkerTimeout(idle, id);
         idle.worker.postMessage(request, { transfer: [buffer] });
