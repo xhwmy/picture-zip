@@ -10,7 +10,7 @@ export const SSIM_THRESHOLDS: Record<PerceptualLevel, number> = {
   maximum: 0.99,
 };
 
-export const PERCEPTUAL_MIN_QUALITY = 30;
+export const PERCEPTUAL_MIN_QUALITY = 5;
 export const PERCEPTUAL_MAX_QUALITY = 100;
 
 interface RoundTrip {
