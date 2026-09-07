@@ -198,6 +198,7 @@ export function createQueue(
     targetSizeKB: options.targetSizeKB,
     visuallyLossless: options.visuallyLossless,
     perceptualLevel: options.perceptualLevel,
+    ultraLossy: options.ultraLossy,
   };
 
   const items: QueueItem[] = [];

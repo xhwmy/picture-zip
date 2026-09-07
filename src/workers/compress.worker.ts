@@ -81,12 +81,14 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
     } else if (msg.ultraLossy) {
       const decoded = await decodeBuffer(msg.buffer, msg.mimeType);
       postProgress(msg.id, 'decoded');
-      const encoded = await encodeImage(decoded, 'jpeg', 1, true);
+      const resized = await resizeImage(decoded, msg.maxWidth, msg.maxHeight, msg.resizeMode);
+      const encoded = await encodeImage(resized.image, 'jpeg', 1, true);
       postProgress(msg.id, 'encoded');
-      result = toCompressOutput(encoded.buffer, encoded.mimeType, encoded.extension, decoded.width, decoded.height, 1, false, msg.buffer.byteLength);
+      result = toCompressOutput(encoded.buffer, encoded.mimeType, encoded.extension, resized.image.width, resized.image.height, 1, resized.resized, msg.buffer.byteLength);
     } else {
       const resolvedFormat = msg.format === 'auto' ? autoFormatFromInput(detectFormat(msg.mimeType, msg.buffer)) : msg.format;
-      const fast = await fastEncodeFromBuffer(msg.buffer, msg.mimeType, resolvedFormat as Exclude<typeof resolvedFormat, 'auto'>, msg.quality);
+      const hasResize = msg.maxWidth !== undefined || msg.maxHeight !== undefined;
+      const fast = hasResize ? null : await fastEncodeFromBuffer(msg.buffer, msg.mimeType, resolvedFormat as Exclude<typeof resolvedFormat, 'auto'>, msg.quality);
       if (fast) {
         postProgress(msg.id, 'decoded');
         postProgress(msg.id, 'encoded');

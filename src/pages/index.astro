@@ -32,10 +32,18 @@ const faqLd = {
     },
     {
       '@type': 'Question',
-      name: 'Is there a limit on the number of images?',
+      name: 'Does compression reduce image quality?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'No hard limit. You can batch-process hundreds of images, though very large batches may use more memory.',
+        text: 'Lossy formats (JPEG, WebP, AVIF) trade some quality for smaller size. You control the quality slider, or use target-size mode to hit a specific size.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'What formats are supported?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Input: JPEG, PNG, WebP, GIF, AVIF. Output: JPEG, PNG, WebP, AVIF.',
       },
     },
   ],
