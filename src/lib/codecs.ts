@@ -182,13 +182,14 @@ export async function encodeImage(
   image: DecodedImage,
   format: OutputFormat,
   quality: number,
+  forceWasm?: boolean,
 ): Promise<EncodedImage> {
   let resolvedFormat = format;
   if (resolvedFormat === 'auto') {
     resolvedFormat = autoFormatFromInput(image.format);
   }
 
-  if (supportsOffscreenCanvas() && (resolvedFormat === 'jpeg' || resolvedFormat === 'webp' || resolvedFormat === 'png')) {
+  if (!forceWasm && supportsOffscreenCanvas() && (resolvedFormat === 'jpeg' || resolvedFormat === 'webp' || resolvedFormat === 'png')) {
     try {
       const canvas = new OffscreenCanvas(image.width, image.height);
       const ctx = canvas.getContext('2d');

@@ -78,6 +78,12 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
         postProgress(msg.id, 'decoded');
         postProgress(msg.id, 'encoded');
       }
+    } else if (msg.ultraLossy) {
+      const decoded = await decodeBuffer(msg.buffer, msg.mimeType);
+      postProgress(msg.id, 'decoded');
+      const encoded = await encodeImage(decoded, 'jpeg', 1, true);
+      postProgress(msg.id, 'encoded');
+      result = toCompressOutput(encoded.buffer, encoded.mimeType, encoded.extension, decoded.width, decoded.height, 1, false, msg.buffer.byteLength);
     } else {
       const resolvedFormat = msg.format === 'auto' ? autoFormatFromInput(detectFormat(msg.mimeType, msg.buffer)) : msg.format;
       const fast = await fastEncodeFromBuffer(msg.buffer, msg.mimeType, resolvedFormat as Exclude<typeof resolvedFormat, 'auto'>, msg.quality);
