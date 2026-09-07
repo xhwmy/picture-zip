@@ -29,7 +29,20 @@ const appLd = {
         <li>格式之间转换</li>
         <li>批量处理，简洁的 JSON 响应</li>
       </ul>
-      <p>想在上线时收到通知？发邮件到 <a href="mailto:api@picture-zip.com">api@picture-zip.com</a>，我们会通知你。</p>
+    </div>
+
+    <div class="card contact">
+      <h2>联系方式与反馈</h2>
+      <p>有建议或功能需求？欢迎联系，期待你的反馈。</p>
+      <ul class="list">
+        <li>
+          邮箱：<a href="mailto:18710189020@163.com">18710189020@163.com</a>
+        </li>
+        <li>
+          GitHub：<a href="https://github.com/xhwmy/picture-zip" target="_blank" rel="noopener">github.com/xhwmy/picture-zip</a>
+        </li>
+      </ul>
+      <p>欢迎直接在开源仓库提 issue 或 pull request。</p>
     </div>
   </section>
 </Layout>
@@ -38,8 +51,10 @@ const appLd = {
   .page { max-width: 760px; margin-top: 48px; }
   .page h1 { font-size: 34px; margin-bottom: 12px; }
   .lead { color: var(--muted); font-size: 17px; margin-bottom: 24px; }
-  .coming-soon h2 { font-size: 20px; margin-bottom: 10px; }
-  .coming-soon p { color: var(--muted); margin-bottom: 14px; }
+  .coming-soon h2, .contact h2 { font-size: 20px; margin-bottom: 10px; }
+  .coming-soon p, .contact p { color: var(--muted); margin-bottom: 14px; }
   .list { margin: 0 0 14px 20px; }
   .list li { margin: 4px 0; }
+  .contact { margin-top: 20px; }
+  .contact a { color: var(--link, #1f6feb); }
 </style>
