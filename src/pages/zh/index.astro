@@ -90,6 +90,12 @@ const faqLd = {
       <p>输入：JPEG、PNG、WebP、GIF、AVIF。输出：JPEG、PNG、WebP、AVIF。</p>
     </div>
   </section>
+
+  <section class="container app-download">
+    <h2>下载 Android 应用</h2>
+    <p>手机上直接压缩图片——从相册选择、压缩、一键替换原图。</p>
+    <a href="/picture-app-v3.01.apk" class="download-btn" download>下载 APK · v3.01 · 6.1 MB</a>
+  </section>
 </Layout>
 
 <style>
@@ -192,6 +198,38 @@ const faqLd = {
   .faq__item p {
     color: var(--muted);
     font-size: 14px;
+  }
+  .app-download {
+    margin-top: 48px;
+    max-width: 720px;
+    padding: 28px 32px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    text-align: center;
+  }
+  .app-download h2 {
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+  .app-download p {
+    color: var(--muted);
+    font-size: 15px;
+    margin-bottom: 20px;
+  }
+  .download-btn {
+    display: inline-block;
+    padding: 12px 32px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: opacity 0.15s ease;
+  }
+  .download-btn:hover {
+    opacity: 0.88;
   }
   @media (max-width: 768px) {
     .hero__inner {
