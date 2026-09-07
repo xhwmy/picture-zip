@@ -358,6 +358,7 @@ export function createQueue(
           maxHeight: settings.maxHeight,
           resizeMode: settings.resizeMode,
           perceptualLevel: usePerceptual ? (settings.perceptualLevel ?? 'normal') : undefined,
+          ultraLossy: wantsUltraLossy || undefined,
         };
         setWorkerTimeout(idle, id);
         idle.worker.postMessage(request, { transfer: [buffer] });
