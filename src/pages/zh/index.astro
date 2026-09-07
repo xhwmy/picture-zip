@@ -27,10 +27,18 @@ const faqLd = {
     },
     {
       '@type': 'Question',
-      name: '有图片数量限制吗？',
+      name: '压缩会损坏画质吗？',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: '没有硬性限制，可以批量处理数百张图片，但超大批量可能占用更多内存。',
+        text: '有损格式（JPEG、WebP、AVIF）以少量画质换取更小体积，你可以通过质量滑杆控制，或使用目标大小模式。PNG 输出为无损。',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '支持哪些格式？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: '输入：JPEG、PNG、WebP、GIF、AVIF。输出：JPEG、PNG、WebP、AVIF。',
       },
     },
   ],
