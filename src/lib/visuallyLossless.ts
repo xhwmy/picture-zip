@@ -10,8 +10,32 @@ export const SSIM_THRESHOLDS: Record<PerceptualLevel, number> = {
   maximum: 0.99,
 };
 
-export const PERCEPTUAL_MIN_QUALITY = 5;
+export const PERCEPTUAL_MIN_QUALITY = 20;
 export const PERCEPTUAL_MAX_QUALITY = 100;
+
+const SSIM_SAMPLE_SIZE = 512;
+
+function downsampleForSsim(image: DecodedImage): DecodedImage {
+  const { width, height, data } = image;
+  if (width <= SSIM_SAMPLE_SIZE && height <= SSIM_SAMPLE_SIZE) return image;
+  const scale = Math.min(SSIM_SAMPLE_SIZE / width, SSIM_SAMPLE_SIZE / height);
+  const targetW = Math.max(1, Math.round(width * scale));
+  const targetH = Math.max(1, Math.round(height * scale));
+  const out = new Uint8ClampedArray(targetW * targetH * 4);
+  for (let y = 0; y < targetH; y++) {
+    const srcY = Math.min(height - 1, Math.floor(y / scale));
+    for (let x = 0; x < targetW; x++) {
+      const srcX = Math.min(width - 1, Math.floor(x / scale));
+      const srcIdx = (srcY * width + srcX) * 4;
+      const dstIdx = (y * targetW + x) * 4;
+      out[dstIdx] = data[srcIdx];
+      out[dstIdx + 1] = data[srcIdx + 1];
+      out[dstIdx + 2] = data[srcIdx + 2];
+      out[dstIdx + 3] = data[srcIdx + 3];
+    }
+  }
+  return { data: out, width: targetW, height: targetH, format: image.format };
+}
 
 interface RoundTrip {
   encoded: EncodedImage;
@@ -66,9 +90,10 @@ export async function compressVisuallyLossless(
     options.resizeMode,
   );
   const image = resized.image;
+  const sampleImage = downsampleForSsim(image);
 
   const maxTrip = await roundTrip(image, options.format, PERCEPTUAL_MAX_QUALITY);
-  const maxSsim = computeSsim(image, maxTrip.decoded);
+  const maxSsim = computeSsim(sampleImage, downsampleForSsim(maxTrip.decoded));
   if (maxSsim < threshold) {
     return buildOutput(
       maxTrip.encoded,
@@ -87,7 +112,7 @@ export async function compressVisuallyLossless(
   while (lo <= hi) {
     const mid = Math.floor((lo + hi) / 2);
     const trip = await roundTrip(image, options.format, mid);
-    const ssim = computeSsim(image, trip.decoded);
+    const ssim = computeSsim(sampleImage, downsampleForSsim(trip.decoded));
     if (ssim >= threshold) {
       best = trip;
       bestQuality = mid;
