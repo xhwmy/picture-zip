@@ -27,7 +27,8 @@ const PRESETS: { label: string; settings: Partial<CompressSettings> }[] = [
 export function SettingsPanel({ settings, onChange, targetModeDisabled, hasGif }: SettingsPanelProps) {
   const targetMode = settings.targetSizeKB !== undefined;
   const perceptualMode = settings.visuallyLossless === true;
-  const qualityLocked = targetMode || perceptualMode;
+  const ultraLossyMode = settings.ultraLossy === true;
+  const qualityLocked = targetMode || perceptualMode || ultraLossyMode;
   const [collapsed, setCollapsed] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('custom');
 
@@ -58,8 +59,18 @@ export function SettingsPanel({ settings, onChange, targetModeDisabled, hasGif }
       const { visuallyLossless, ...rest } = settings;
       onChange(rest);
     } else {
-      const { targetSizeKB, ...rest } = settings;
+      const { targetSizeKB, ultraLossy, ...rest } = settings;
       onChange({ ...rest, visuallyLossless: true, perceptualLevel: rest.perceptualLevel ?? 'normal' });
+    }
+  }
+
+  function toggleUltraLossyMode() {
+    if (ultraLossyMode) {
+      const { ultraLossy, ...rest } = settings;
+      onChange(rest);
+    } else {
+      const { targetSizeKB, visuallyLossless, ...rest } = settings;
+      onChange({ ...rest, ultraLossy: true });
     }
   }
 
@@ -107,7 +118,7 @@ export function SettingsPanel({ settings, onChange, targetModeDisabled, hasGif }
         <p class="settings__hint">{t('settings.gifOutputHint')}</p>
       )}
 
-      {!perceptualMode && (
+      {!perceptualMode && !ultraLossyMode && (
         <div class={`settings__row${qualityLocked ? ' settings__row--locked' : ''}`}>
           <label class="settings__label" htmlFor="quality">
             {t('settings.quality')}
@@ -220,7 +231,7 @@ export function SettingsPanel({ settings, onChange, targetModeDisabled, hasGif }
             <input
               type="checkbox"
               checked={targetMode}
-              disabled={targetModeDisabled || perceptualMode}
+              disabled={targetModeDisabled || perceptualMode || ultraLossyMode}
               onChange={toggleTargetMode}
             />
             <span>{t('settings.targetMode')}</span>
@@ -257,7 +268,7 @@ export function SettingsPanel({ settings, onChange, targetModeDisabled, hasGif }
             <input
               type="checkbox"
               checked={perceptualMode}
-              disabled={hasGif || targetMode}
+              disabled={hasGif || targetMode || ultraLossyMode}
               onChange={togglePerceptualMode}
             />
             <span>{t('settings.perceptualMode')}</span>
@@ -285,6 +296,25 @@ export function SettingsPanel({ settings, onChange, targetModeDisabled, hasGif }
                 ))}
               </div>
             </div>
+          </div>
+        )}
+      </div>
+
+      <div class={`settings__row settings__target${ultraLossyMode ? ' settings__target--on' : ''}`}>
+        <div class="settings__target-head">
+          <label class="settings__checkbox">
+            <input
+              type="checkbox"
+              checked={ultraLossyMode}
+              disabled={hasGif || targetMode || perceptualMode}
+              onChange={toggleUltraLossyMode}
+            />
+            <span>{t('settings.ultraLossyMode')}</span>
+          </label>
+        </div>
+        {ultraLossyMode && (
+          <div class="settings__target-body">
+            <p class="settings__hint">{t('settings.ultraLossyDesc')}</p>
           </div>
         )}
       </div>
