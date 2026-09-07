@@ -1,4 +1,4 @@
-import { decodeBuffer, encodeImage, resizeImage } from './codecs';
+import { decodeBuffer, encodeImage, resizeImage, fastEncodeFromBuffer, autoFormatFromInput, detectFormat } from './codecs';
 import type { CompressionOptions, CompressOutput } from './types';
 
 export async function compressBuffer(
@@ -6,6 +6,26 @@ export async function compressBuffer(
   mimeType: string,
   options: CompressionOptions,
 ): Promise<CompressOutput> {
+  if (!options.maxWidth && !options.maxHeight) {
+    const resolvedFormat = options.format === 'auto' ? autoFormatFromInput(detectFormat(mimeType, buffer)) : options.format;
+    if (resolvedFormat !== 'avif') {
+      const fast = await fastEncodeFromBuffer(buffer, mimeType, resolvedFormat as Exclude<typeof resolvedFormat, 'auto'>, options.quality);
+      if (fast) {
+        return {
+          buffer: fast.buffer,
+          mimeType: fast.mimeType,
+          extension: fast.extension,
+          byteLength: fast.buffer.byteLength,
+          width: fast.width,
+          height: fast.height,
+          qualityUsed: options.quality,
+          resized: false,
+          originalByteLength: buffer.byteLength,
+        };
+      }
+    }
+  }
+
   const decoded = await decodeBuffer(buffer, mimeType);
   const resized = await resizeImage(decoded, options.maxWidth, options.maxHeight, options.resizeMode);
   const encoded = await encodeImage(resized.image, options.format, options.quality);

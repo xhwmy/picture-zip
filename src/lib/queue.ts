@@ -54,7 +54,7 @@ interface WorkerHandle {
 
 function defaultPoolSize(): number {
   const concurrency = globalThis.navigator?.hardwareConcurrency ?? 4;
-  return Math.max(1, Math.min(4, concurrency - 1));
+  return Math.max(2, Math.min(6, concurrency));
 }
 
 function isValidFile(file: File): boolean {
@@ -291,6 +291,8 @@ export function createQueue(
   }
 
   function onMessage(handle: WorkerHandle, msg: WorkerResponse) {
+    if (msg.type === 'progress') return;
+
     clearTimeout(timeouts.get(handle));
     timeouts.delete(handle);
 

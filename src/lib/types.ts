@@ -85,6 +85,7 @@ export interface WorkerRequest {
 }
 
 export type WorkerResponse =
+  | { type: 'progress'; id: string; stage: 'decoded' | 'encoded' }
   | { type: 'success'; id: string; result: CompressOutput }
   | { type: 'error'; id: string; error: string; code?: string };
 

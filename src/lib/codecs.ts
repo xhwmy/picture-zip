@@ -187,6 +187,22 @@ export async function encodeImage(
   if (resolvedFormat === 'auto') {
     resolvedFormat = autoFormatFromInput(image.format);
   }
+
+  if (supportsOffscreenCanvas() && (resolvedFormat === 'jpeg' || resolvedFormat === 'webp' || resolvedFormat === 'png')) {
+    try {
+      const canvas = new OffscreenCanvas(image.width, image.height);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new CodecError('encode-error');
+      ctx.putImageData(new ImageData(new Uint8ClampedArray(image.data), image.width, image.height), 0, 0);
+      const mime = OUTPUT_MIME[resolvedFormat as Exclude<OutputFormat, 'auto'>];
+      const blob = await canvas.convertToBlob({ type: mime, quality: quality / 100 });
+      const buffer = await blob.arrayBuffer();
+      return { buffer, mimeType: mime, extension: OUTPUT_EXTENSION[resolvedFormat as Exclude<OutputFormat, 'auto'>] };
+    } catch {
+      // 回退到 WASM
+    }
+  }
+
   const imageData = toImageData(image);
   switch (resolvedFormat) {
     case 'jpeg': {
@@ -221,7 +237,7 @@ export async function encodeImage(
   }
 }
 
-function autoFormatFromInput(format: InputFormat): Exclude<OutputFormat, 'auto'> {
+export function autoFormatFromInput(format: InputFormat): Exclude<OutputFormat, 'auto'> {
   switch (format) {
     case 'jpeg':
       return 'jpeg';
@@ -338,4 +354,30 @@ export async function resizeImage(
     },
     resized: true,
   };
+}
+
+export async function fastEncodeFromBuffer(
+  buffer: ArrayBuffer,
+  mimeType: string,
+  outputFormat: Exclude<OutputFormat, 'auto'>,
+  quality: number,
+): Promise<{ buffer: ArrayBuffer; mimeType: string; extension: string; width: number; height: number } | null> {
+  if (outputFormat === 'avif' || !supportsOffscreenCanvas()) return null;
+  try {
+    const blob = new Blob([buffer], { type: mimeType });
+    const bitmap = await createImageBitmap(blob);
+    const width = bitmap.width;
+    const height = bitmap.height;
+    const canvas = new OffscreenCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) { bitmap.close(); return null; }
+    ctx.drawImage(bitmap, 0, 0);
+    bitmap.close();
+    const outMime = OUTPUT_MIME[outputFormat];
+    const outBlob = await canvas.convertToBlob({ type: outMime, quality: quality / 100 });
+    const outBuffer = await outBlob.arrayBuffer();
+    return { buffer: outBuffer, mimeType: outMime, extension: OUTPUT_EXTENSION[outputFormat], width, height };
+  } catch {
+    return null;
+  }
 }
