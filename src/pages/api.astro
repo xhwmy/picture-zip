@@ -5,7 +5,7 @@ const appLd = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
   name: 'picture-zip Image Compression API',
-  url: 'https://picture-zip.com/api/',
+  url: 'https://picture-zip.pages.dev/api/',
   applicationCategory: 'DeveloperApplication',
   operatingSystem: 'Web',
   description:
@@ -34,9 +34,23 @@ const appLd = {
         <li>Convert between formats</li>
         <li>Batch processing with simple JSON responses</li>
       </ul>
+    </div>
+
+    <div class="card contact">
+      <h2>Contact & Feedback</h2>
       <p>
-        Want to be notified when it launches? Email{' '}
-        <a href="mailto:api@picture-zip.com">api@picture-zip.com</a> and we'll keep you posted.
+        Have a suggestion or feature request? Reach out — I'd love to hear from you.
+      </p>
+      <ul class="list">
+        <li>
+          Email: <a href="mailto:18710189020@163.com">18710189020@163.com</a>
+        </li>
+        <li>
+          GitHub: <a href="https://github.com/xhwmy/picture-zip" target="_blank" rel="noopener">github.com/xhwmy/picture-zip</a>
+        </li>
+      </ul>
+      <p>
+        Feel free to open an issue or pull request directly on the open-source repository.
       </p>
     </div>
   </section>
@@ -56,11 +70,13 @@ const appLd = {
     font-size: 17px;
     margin-bottom: 24px;
   }
-  .coming-soon h2 {
+  .coming-soon h2,
+  .contact h2 {
     font-size: 20px;
     margin-bottom: 10px;
   }
-  .coming-soon p {
+  .coming-soon p,
+  .contact p {
     color: var(--muted);
     margin-bottom: 14px;
   }
@@ -69,5 +85,11 @@ const appLd = {
   }
   .list li {
     margin: 4px 0;
+  }
+  .contact {
+    margin-top: 20px;
+  }
+  .contact a {
+    color: var(--link, #1f6feb);
   }
 </style>
