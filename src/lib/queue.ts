@@ -341,6 +341,7 @@ export function createQueue(
         const gif = isGifBytes(buffer);
         const wantsTarget = settings.targetSizeKB !== undefined;
         const wantsPerceptual = settings.visuallyLossless === true && !wantsTarget;
+        const wantsUltraLossy = settings.ultraLossy === true && !wantsTarget && !wantsPerceptual;
         const useTarget = wantsTarget && !gif;
         const usePerceptual = wantsPerceptual && !gif;
         item.gifTargetBypassed = wantsTarget && gif;
@@ -350,8 +351,8 @@ export function createQueue(
           id,
           buffer,
           mimeType: item.file.type,
-          format: settings.format,
-          quality: settings.quality,
+          format: wantsUltraLossy ? 'jpeg' : settings.format,
+          quality: wantsUltraLossy ? 1 : settings.quality,
           targetKB: useTarget ? settings.targetSizeKB : undefined,
           maxWidth: settings.maxWidth,
           maxHeight: settings.maxHeight,

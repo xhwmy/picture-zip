@@ -69,6 +69,8 @@
   "settings.perceptual_high": "高",
   "settings.perceptual_maximum": "极致",
   "settings.perceptualGifDisabled": "GIF 不支持视觉无损模式。",
+  "settings.ultraLossyMode": "全损压缩模式",
+  "settings.ultraLossyDesc": "强制质量 1 + JPEG，体积最小，画质极低（灰白马赛克）。",
   "settings.gifOutputHint": "动画 GIF 保持 .gif 输出；静态 GIF 遵循所选格式。",
 
   "queue.title": "任务队列",

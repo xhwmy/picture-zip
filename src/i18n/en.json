@@ -69,6 +69,8 @@
   "settings.perceptual_high": "High",
   "settings.perceptual_maximum": "Maximum",
   "settings.perceptualGifDisabled": "GIF does not support visually lossless mode.",
+  "settings.ultraLossyMode": "Ultra-lossy mode",
+  "settings.ultraLossyDesc": "Forces quality 1 + JPEG, smallest size, very low quality (gray mosaic).",
   "settings.gifOutputHint": "Animated GIF stays .gif; static GIF follows your chosen format.",
 
   "queue.title": "Queue",

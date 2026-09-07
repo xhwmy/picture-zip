@@ -15,6 +15,7 @@ export interface CompressSettings {
   targetSizeKB?: number;
   visuallyLossless?: boolean;
   perceptualLevel?: PerceptualLevel;
+  ultraLossy?: boolean;
 }
 
 export interface CompressionOptions {
